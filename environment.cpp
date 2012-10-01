@@ -4,6 +4,8 @@
 
 #include "util.hpp"
 
+// Coin Flip
+
 CoinFlip::CoinFlip(options_t &options) {
 	// Determine the probability of the coin landing on heads
 	p = 1.0;
@@ -25,3 +27,8 @@ void CoinFlip::performAction(action_t action) {
 	m_observation = rand01() < p ? 1 : 0;
 	m_reward = action == m_observation ? 1 : 0;
 }
+
+
+
+// Tiger
+

@@ -7,7 +7,7 @@
 #include <vector>
 
 // Streams for logging (defined in main.cpp)
-extern std::ofstream log;
+extern std::ofstream logFile; // bitch!
 extern std::ofstream compactLog;
 
 // symbols that can be predicted

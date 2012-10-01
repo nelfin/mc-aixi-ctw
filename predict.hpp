@@ -30,6 +30,9 @@ public:
 	// child corresponding to a particular symbol
 	const CTNode *child(symbol_t sym) const { return m_child[sym]; }
 
+  // best cheating function ever
+  void update(symbol_t sym, int depth, history_t history);
+  
 	// number of descendants
 	size_t size(void) const;
 
