@@ -46,4 +46,18 @@ private:
 	double p; // Probability of observing 1 (heads)
 };
 
+class GridWorld : public Environment {
+public:
+
+	// set up the initial environment percept
+	GridWorld(options_t &options);
+
+	// receives the agent's action and calculates the new environment percept
+	virtual void performAction(action_t action);
+
+private:
+	int x; //x dimension
+	int y; //y dimension
+};
+
 #endif // __ENVIRONMENT_HPP__
