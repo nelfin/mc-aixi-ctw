@@ -159,7 +159,7 @@ int main(int argc, char *argv[]) {
 
 	// Set up logging
 	std::string log_file = argc < 3 ? "log" : argv[2];
-	logFile.open((log_file + ".log").c_str());
+	logFile.open((log_file).c_str());
 	compactLog.open((log_file + ".csv").c_str());
 
 	// Print header to compactLog
@@ -213,13 +213,19 @@ int main(int argc, char *argv[]) {
 		// TODO: instantiate "env" (if appropriate)
 	}
 	else if (environment_name == "4x4-grid") {
-		// TODO: instantiate "env" (if appropriate)
+		env = new GridWorld(options);
+		options["agent-actions"] = "4";
+		options["observation-bits"] = "1";
+		options["reward-bits"] = "1";
 	}
 	else if (environment_name == "tictactoe") {
 		// TODO: instantiate "env" (if appropriate)
 	}
 	else if (environment_name == "biased-rock-paper-scissor") {
-		// TODO: instantiate "env" (if appropriate)
+		env = new RPS(options);
+		options["agent-actions"] = "3";
+		options["observation-bits"] = "1";
+		options["reward-bits"] = "1";
 	}
 	else if (environment_name == "kuhn-poker") {
 		// TODO: instantiate "env" (if appropriate)

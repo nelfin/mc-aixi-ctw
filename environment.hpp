@@ -20,7 +20,7 @@ public:
 
 	percept_t getObservation(void) const { return m_observation; }
 
-	percept_t getReward(void) const { return m_reward; }
+	virtual percept_t getReward(void) const { return m_reward; }
 
 protected: // visible to inherited classes
 	action_t m_last_action;  // the last action performed by the agent
@@ -44,6 +44,36 @@ public:
 
 private:
 	double p; // Probability of observing 1 (heads)
+};
+
+class GridWorld : public Environment {
+public:
+
+	// set up the initial environment percept
+	GridWorld(options_t &options);
+
+	// receives the agent's action and calculates the new environment percept
+	void performAction(action_t action);
+
+private:
+	int m_x; //x dimension
+	int m_y; //y dimension
+};
+
+class RPS : public Environment {
+public:
+
+	// set up the initial environment percept
+	RPS(options_t &options);
+
+	// receives the agent's action and calculates the new environment percept
+	void performAction(action_t action);
+	
+	percept_t getReward(void) const { return m_signed_reward + 1; }
+
+private:
+	bool m_previous_rock_win; //whether the environment won the last game with rock
+	int m_signed_reward; // the possibly negative version of m_reward
 };
 
 #endif // __ENVIRONMENT_HPP__
