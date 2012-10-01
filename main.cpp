@@ -222,7 +222,10 @@ int main(int argc, char *argv[]) {
 		// TODO: instantiate "env" (if appropriate)
 	}
 	else if (environment_name == "biased-rock-paper-scissor") {
-		// TODO: instantiate "env" (if appropriate)
+		env = new RPS(options);
+		options["agent-actions"] = "3";
+		options["observation-bits"] = "1";
+		options["reward-bits"] = "1";
 	}
 	else if (environment_name == "kuhn-poker") {
 		// TODO: instantiate "env" (if appropriate)

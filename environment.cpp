@@ -40,8 +40,8 @@ void CoinFlip::performAction(action_t action) {
 
 GridWorld::GridWorld(options_t &options) {
 	
-	x = randRange(SIZE+1);
-	y = randRange(SIZE+1);
+	m_x = randRange(SIZE+1);
+	m_y = randRange(SIZE+1);
 
 	// Set up the initial observation
 	m_observation = 0;
@@ -53,41 +53,76 @@ void GridWorld::performAction(action_t action) {
 	m_reward = 0;
 	m_observation = NOTHING;
 	
-	if (x == DESTX && y == DESTY){
+	if (m_x == DESTX && m_y == DESTY){
 		m_reward = 1;
-		x = randRange(SIZE+1);
-		y = randRange(SIZE+1);
+		m_x = randRange(SIZE+1);
+		m_y = randRange(SIZE+1);
 	}
 	
 	switch (action){
 		case UP:
-			x++;
+			m_x++;
 			break;
 		case RIGHT:
-			x++;
-			y++;
+			m_x++;
+			m_y++;
 			break;
 		case DOWN:
-			y--;
+			m_y--;
 			break;
 		case LEFT:
-			y--;
-			x--;
+			m_y--;
+			m_x--;
 			break;
 		default:
 			printf("Error: Unhandled action case");
 	}
 	
-	if (x>SIZE){
-		x = SIZE;
-	} else if (x<0){
-		x = 0;
-	} else if (y>SIZE){
-		y = SIZE;
-	} else if (y<0){
-		y = 0;
+	if (m_x>SIZE){
+		m_x = SIZE;
+	} else if (m_x<0){
+		m_x = 0;
+	} else if (m_y>SIZE){
+		m_y = SIZE;
+	} else if (m_y<0){
+		m_y = 0;
 	}
 	
-	log << "position: " << x << "," << y << std::endl;
+	log << "position: " << m_x << "," << m_y << std::endl;
+	
+}
+
+//biased rock paper scissors Environment
+//Keeps the m_reward value at zero and uses m_signed_reward instead
+#define ROCK 0
+#define SCISSORS 1
+#define PAPER 2
+
+RPS::RPS(options_t &options) {
+	// Set up the initial observation
+	m_observation = 0;
+	m_signed_reward = 0;
+	
+	m_previous_rock_win = 0;
+}
+
+void RPS::performAction(action_t action) {
+	if(m_previous_rock_win){
+		m_observation = ROCK;
+	}else{
+		m_observation = randRange(3);
+	}
+	
+	if((action+1)%3 == m_observation){
+		m_signed_reward = 1;
+		log << "result: Agent won with " << action << " (reward " << m_signed_reward<< ")" << std::endl;
+	}else if (action == m_observation){
+		m_signed_reward = 0;
+		log << "result: Draw with " << action << " (reward " << m_signed_reward<< ")" << std::endl;
+	}else{
+		m_signed_reward = -1;
+		log << "result: Environment won with " << m_observation << " (reward " << m_signed_reward << ")" << std::endl;
+	}
+	//log << "played: " << m_observation << " vs agent's " << action << std::endl;
 	
 }
