@@ -76,4 +76,16 @@ private:
 	int m_signed_reward; // the possibly negative version of m_reward
 };
 
+class Pacman : public Environment {
+public:
+
+	// set up the initial environment percept
+	Pacman(options_t &options);
+
+	// receives the agent's action and calculates the new environment percept
+	void performAction(action_t action);
+private:
+	char *map;
+};
+
 #endif // __ENVIRONMENT_HPP__

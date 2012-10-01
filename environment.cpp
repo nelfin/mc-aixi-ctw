@@ -126,3 +126,18 @@ void RPS::performAction(action_t action) {
 	//log << "played: " << m_observation << " vs agent's " << action << std::endl;
 	
 }
+
+//Pacman environment
+#define DIMX 17
+#define DIMY 17
+Pacman::Pacman(options_t &options) {
+	// Set up the initial observation
+	map = malloc(sizeof(char)*DIMX*DIMY);
+	map[x][y]
+	m_observation = 0;
+	m_signed_reward = 0;
+}
+
+void Pacman::performAction(action_t action) {
+	
+}
