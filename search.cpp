@@ -49,5 +49,6 @@ static reward_t playout(Agent &agent, unsigned int playout_len) {
 // determine the best action by searching ahead using MCTS
 extern action_t search(Agent &agent) {
 	return agent.genRandomAction(); // TODO: implement
+
 }
 

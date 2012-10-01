@@ -45,7 +45,7 @@ public:
 
 	// generate an action uniformly at random
 	action_t genRandomAction(void) const;
-
+  
 	// generate an action distributed according
 	// to our history statistics
 	action_t genAction(void) const; // TODO: implement in agent.cpp

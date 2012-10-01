@@ -12,12 +12,12 @@
 #include "util.hpp"
 
 // Streams for logging
-std::ofstream log;        // A verbose human-readable log
+std::ofstream logFile;        // A verbose human-readable log
 std::ofstream compactLog; // A compact comma-separated value log
 
 // The main agent/environment interaction loop
 void mainLoop(Agent &ai, Environment &env, options_t &options) {
-
+  
 	// Determine exploration options
 	bool explore = options.count("exploration") > 0;
 	double explore_rate, explore_decay;
@@ -42,7 +42,7 @@ void mainLoop(Agent &ai, Environment &env, options_t &options) {
 
 		// check for agent termination
 		if (terminate_check && ai.age() > terminate_age) {
-			log << "info: terminating agent" << std::endl;
+			logFile << "info: terminating agent" << std::endl;
 			break;
 		}
 
@@ -58,7 +58,7 @@ void mainLoop(Agent &ai, Environment &env, options_t &options) {
 		bool explored = false;
 		if (explore && rand01() < explore_rate) {
 			explored = true;
-			action = ai.genRandomAction();
+			action = ai.genRandomAction();	
 		}
 		else {
 			action = search(ai); // TODO: implement in search.cpp
@@ -70,17 +70,17 @@ void mainLoop(Agent &ai, Environment &env, options_t &options) {
 		// Update agent's environment model with the chosen action
 		ai.modelUpdate(action); // TODO: implement in agent.cpp
 
-		// Log this turn
-		log << "cycle: " << cycle << std::endl;
-		log << "observation: " << observation << std::endl;
-		log << "reward: " << reward << std::endl;
-		log << "action: " << action << std::endl;
-		log << "explored: " << (explored ? "yes" : "no") << std::endl;
-		log << "explore rate: " << explore_rate << std::endl;
-		log << "total reward: " << ai.reward() << std::endl;
-		log << "average reward: " << ai.averageReward() << std::endl;
+		// LogFile this turn
+		logFile << "cycle: " << cycle << std::endl;
+		logFile << "observation: " << observation << std::endl;
+		logFile << "reward: " << reward << std::endl;
+		logFile << "action: " << action << std::endl;
+		logFile << "explored: " << (explored ? "yes" : "no") << std::endl;
+		logFile << "explore rate: " << explore_rate << std::endl;
+		logFile << "total reward: " << ai.reward() << std::endl;
+		logFile << "average reward: " << ai.averageReward() << std::endl;
 
-		// Log the data in a more compact form
+		// LogFile the data in a more compact form
 		compactLog << cycle << ", " << observation << ", " << reward << ", "
 				<< action << ", " << explored << ", " << explore_rate << ", "
 				<< ai.reward() << ", " << ai.averageReward() << std::endl;
@@ -153,13 +153,13 @@ void processOptions(std::ifstream &in, options_t &options) {
 int main(int argc, char *argv[]) {
 	if (argc < 2 || argc > 3) {
 		std::cerr << "ERROR: Incorrect number of arguments" << std::endl;
-		std::cerr << "The first argument should indicate the location of the configuration file and the second (optional) argument should indicate the file to log to." << std::endl;
+		std::cerr << "The first argument should indicate the location of the configuration file and the second (optional) argument should indicate the file to logFile to." << std::endl;
 		return -1;
 	}
 
 	// Set up logging
 	std::string log_file = argc < 3 ? "log" : argv[2];
-	log.open((log_file).c_str());
+	logFile.open((log_file).c_str());
 	compactLog.open((log_file + ".csv").c_str());
 
 	// Print header to compactLog
@@ -244,7 +244,7 @@ int main(int argc, char *argv[]) {
 	// Run the main agent/environment interaction loop
 	mainLoop(ai, *env, options);
 
-	log.close();
+	logFile.close();
 	compactLog.close();
 
 	return 0;

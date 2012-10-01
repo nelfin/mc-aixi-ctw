@@ -4,6 +4,8 @@
 
 #include "util.hpp"
 
+// Coin Flip
+
 CoinFlip::CoinFlip(options_t &options) {
 	// Determine the probability of the coin landing on heads
 	p = 1.0;
@@ -25,6 +27,12 @@ void CoinFlip::performAction(action_t action) {
 	m_observation = rand01() < p ? 1 : 0;
 	m_reward = action == m_observation ? 1 : 0;
 }
+
+
+
+
+// Tiger
+
 
 //  Grid World Environment
 #define SIZE 4
@@ -88,7 +96,7 @@ void GridWorld::performAction(action_t action) {
 		m_y = 0;
 	}
 	
-	log << "position: " << m_x << "," << m_y << std::endl;
+	logFile << "position: " << m_x << "," << m_y << std::endl;
 	
 }
 
@@ -115,15 +123,15 @@ void RPS::performAction(action_t action) {
 	
 	if((action+1)%3 == m_observation){
 		m_signed_reward = 1;
-		log << "result: Agent won with " << action << " (reward " << m_signed_reward<< ")" << std::endl;
+		logFile << "result: Agent won with " << action << " (reward " << m_signed_reward<< ")" << std::endl;
 	}else if (action == m_observation){
 		m_signed_reward = 0;
-		log << "result: Draw with " << action << " (reward " << m_signed_reward<< ")" << std::endl;
+		logFile << "result: Draw with " << action << " (reward " << m_signed_reward<< ")" << std::endl;
 	}else{
 		m_signed_reward = -1;
-		log << "result: Environment won with " << m_observation << " (reward " << m_signed_reward << ")" << std::endl;
+		logFile << "result: Environment won with " << m_observation << " (reward " << m_signed_reward << ")" << std::endl;
 	}
-	//log << "played: " << m_observation << " vs agent's " << action << std::endl;
+	//logFile << "played: " << m_observation << " vs agent's " << action << std::endl;
 	
 }
 
@@ -133,7 +141,7 @@ void RPS::performAction(action_t action) {
 Pacman::Pacman(options_t &options) {
 	// Set up the initial observation
 	map = malloc(sizeof(char)*DIMX*DIMY);
-	map[x][y]
+	//map[x][y]
 	m_observation = 0;
 	m_signed_reward = 0;
 }

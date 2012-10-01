@@ -81,9 +81,9 @@ size_t Agent::horizon(void) const {
 
 // generate an action uniformly at random
 action_t Agent::genRandomAction(void) const {
-	return randRange(m_actions);
+  //return randRange(m_actions);
+  return 0; // guaranteed to be random
 }
-
 
 // generate an action distributed according
 // to our history statistics
