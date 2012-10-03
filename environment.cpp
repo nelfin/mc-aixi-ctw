@@ -140,7 +140,7 @@ void RPS::performAction(action_t action) {
 #define DIMY 17
 Pacman::Pacman(options_t &options) {
 	// Set up the initial observation
-	map = malloc(sizeof(char)*DIMX*DIMY);
+	map = new char[DIMX*DIMY];
 	//map[x][y]
 	m_observation = 0;
 	m_signed_reward = 0;

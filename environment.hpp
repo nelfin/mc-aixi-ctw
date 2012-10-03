@@ -26,6 +26,7 @@ protected: // visible to inherited classes
 	action_t m_last_action;  // the last action performed by the agent
 	percept_t m_observation; // the current observation
 	percept_t m_reward;      // the current reward
+	int m_signed_reward; // the possibly negative version of m_reward
 
 };
 
@@ -73,7 +74,6 @@ public:
 
 private:
 	bool m_previous_rock_win; //whether the environment won the last game with rock
-	int m_signed_reward; // the possibly negative version of m_reward
 };
 
 class Pacman : public Environment {
