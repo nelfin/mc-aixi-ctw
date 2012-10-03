@@ -29,10 +29,61 @@ void CoinFlip::performAction(action_t action) {
 }
 
 
+/* Tiger:
 
+actions
+	open left - 0
+	open right - 1
+	listen - 2
 
-// Tiger
+observation
+	tiger behind left - 0
+	tiger behind right - 1
+	no observation - 2
 
+m_gold_door
+	0 - gold behind left
+	1 - gold behind right
+*/
+
+Tiger::Tiger(options_t &options) {
+	p = 1.0;
+	if (options.count("left-door-p") > 0) {
+		strExtract(options["left-door-p"], p);
+	}
+	assert(0.0 <= p);
+	assert(p <= 1.0);
+	m_listen_chance = 0.85;
+	if (options.count("listen-p") > 0) {
+		strExtract(options["listen-p"], m_listen_chance);
+	}
+	assert(0.0 <= m_listen_chance);
+	assert(m_listen_chance <= 1.0);
+	
+	m_gold_door = rand01() < p ? 1 : 0;
+	m_signed_reward = 0;
+	m_observation = 2;
+	//behindLeftDoor = true;
+}
+void Tiger::performAction(action_t action) {
+
+	if (action == 2) {								// Listen
+		m_signed_reward = -1;
+		if (rand01() < m_listen_chance) {			//Hears the tiger behind the correct door.
+			m_observation = !m_gold_door;
+		} else {									//Hears the tiger behind the incorrect door.
+			m_observation = m_gold_door;
+		}
+	} else {
+		if (action == m_gold_door) {
+			m_signed_reward = 10;
+		} else {
+			m_signed_reward = -100;
+		}
+		m_observation = 2;
+		m_gold_door = rand01() < p ? 1 : 0;
+	}
+}
 
 //  Grid World Environment
 #define SIZE 4

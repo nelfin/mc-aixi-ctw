@@ -207,7 +207,10 @@ int main(int argc, char *argv[]) {
 		// TODO: instantiate "env" (if appropriate)
 	}
 	else if (environment_name == "tiger") {
-		// TODO: instantiate "env" (if appropriate)
+		env = new Tiger(options);
+		options["agent-actions"] = "3";
+		options["observation-bits"] = "2";
+		options["reward-bits"] = "7";
 	}
 	else if (environment_name == "extended-tiger") {
 		// TODO: instantiate "env" (if appropriate)

@@ -47,6 +47,43 @@ private:
 	double p; // Probability of observing 1 (heads)
 };
 
+/* Tiger:
+
+actions
+	open left - 0
+	open right - 1
+	listen - 2
+
+observation
+	tiger behind left - 0
+	tiger behind right - 1
+	no observation - 2
+
+m_gold_door
+	0 - gold behind left
+	1 - gold behind right
+*/
+
+class Tiger : public Environment {
+public:
+	Tiger(options_t &options);
+	
+	virtual void performAction(action_t action);
+	
+	percept_t getReward(void) const { return (percept_t) m_signed_reward + 100; }
+
+private:
+	double p; // Probability that the door hiding the gold is the left door.
+	bool m_gold_door;
+	double m_listen_chance;
+	
+	//Inherited:
+	//action_t m_last_action;  // the last action performed by the agent
+	//percept_t m_observation; // the current observation
+	//percept_t m_reward;      // the current reward
+	//int m_signed_reward;
+};
+
 class GridWorld : public Environment {
 public:
 

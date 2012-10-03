@@ -8,7 +8,7 @@ typedef unsigned long long visits_t;
 // search options
 static const visits_t     MinVisitsBeforeExpansion = 1;
 static const unsigned int MaxDistanceFromRoot  = 100;
-static size_t             MaxSearchNodes;
+//static size_t             MaxSearchNodes;
 
 // contains information about a single "state"
 class SearchNode {
