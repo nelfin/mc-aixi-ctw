@@ -112,10 +112,33 @@ void ContextTree::updateHistory(const symbol_list_t &symlist) {
     }
 }
 
+// internal routine to remove a single symbol from the context tree
+// TODO: testing
+void CTNode::revert(symbol_t sym, int depth, history_t history) {
+    if (depth == 0 || history.empty()) {
+        this->m_count[sym]--;
+        this->m_log_prob_est = this->logKTMul(sym);
+        this->m_log_prob_weighted = this->m_log_prob_est;
+    } else {
+        // no need to delete nodes just yet
+        symbol_t h = history.back();
+        history.pop_back();
+        this->m_child[h]->revert(sym, depth-1, history);
+        this->m_count[sym]--;
+        this->m_log_prob_est = this->logKTMul(sym);
+        this->m_log_prob_weighted = log(0.5) +
+            log(exp(this->m_log_prob_est) +
+                    exp(child(0)->logProbWeighted() +
+                        child(1)->logProbWeighted()));
+        history.push_back(h);
+    }
+}
 
 // removes the most recently observed symbol from the context tree
 void ContextTree::revert(void) {
-	// TODO: implement
+    symbol_t sym = m_history.back();
+    m_history.pop_back();
+    m_root->revert(sym, m_depth, m_history);
 }
 
 
