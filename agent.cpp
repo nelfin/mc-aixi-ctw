@@ -113,7 +113,7 @@ void Agent::modelUpdate(percept_t observation, percept_t reward) {
 	encodePercept(percept, observation, reward);
 
 	m_ct->update(percept);
-	m_ct->updateHistory(percept);
+	// m_history is updated by ContextTree::update
 
 
 	// Update other properties
@@ -131,7 +131,7 @@ void Agent::modelUpdate(action_t action) {
 	symbol_list_t action_syms;
 	encodeAction(action_syms, action);
 	m_ct->update(action_syms);
-	m_ct->updateHistory(action_syms);
+	// m_history is updated by ContextTree::update
 
 	m_time_cycle++;
 	m_last_update_percept = false;

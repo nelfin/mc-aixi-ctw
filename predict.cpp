@@ -87,7 +87,7 @@ void CTNode::update(symbol_t sym, int depth, history_t history) {
 
 void ContextTree::update(symbol_t sym) {
   m_root->update(sym, m_depth, m_history); // cheating ;)
-  // history.push_back(sym); // add the new symbol to the history, do we need to do this?
+  m_history.push_back(sym); // add the new symbol to the history, do we need to do this?
 }
 
 
