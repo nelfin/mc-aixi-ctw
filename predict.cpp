@@ -69,6 +69,11 @@ void CTNode::update(symbol_t sym, int depth, history_t history) {
     this->m_log_prob_weighted = this->m_log_prob_est;
     this->m_count[sym]++;
   } else {
+    // fill out the tree as we go along
+    if (NULL == child(0)) {
+        this->m_child[0] = new CTNode();
+        this->m_child[1] = new CTNode();
+    }
     symbol_t h = history.back();
     history.pop_back();
     this->m_child[h]->update(sym, depth-1, history);
