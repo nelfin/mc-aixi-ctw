@@ -2,7 +2,13 @@
 
 #include <cassert>
 
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <stdlib.h>
+
 #include "util.hpp"
+#include "environment.hpp"
 
 // Coin Flip
 
@@ -90,10 +96,10 @@ void Tiger::performAction(action_t action) {
 #define DESTX 4
 #define DESTY 4
 
-#define UP 0
-#define RIGHT 1
-#define DOWN 2
-#define LEFT 3
+#define GUP 0
+#define GRIGHT 1
+#define GDOWN 2
+#define GLEFT 3
 
 #define NOTHING 0
 
@@ -119,17 +125,17 @@ void GridWorld::performAction(action_t action) {
 	}
 	
 	switch (action){
-		case UP:
+		case GUP:
 			m_x++;
 			break;
-		case RIGHT:
+		case GRIGHT:
 			m_x++;
 			m_y++;
 			break;
-		case DOWN:
+		case GDOWN:
 			m_y--;
 			break;
-		case LEFT:
+		case GLEFT:
 			m_y--;
 			m_x--;
 			break;
@@ -187,16 +193,451 @@ void RPS::performAction(action_t action) {
 }
 
 //Pacman environment
-#define DIMX 17
-#define DIMY 17
+/*#define EMPTY 0
+#define WALL 1
+#define PILL 2
+#define GHOST 3
+#define PACMAN 4
+#define FOOD 5*/
+
 Pacman::Pacman(options_t &options) {
-	// Set up the initial observation
-	map = new char[DIMX*DIMY];
-	//map[x][y]
-	m_observation = 0;
+	reset();
 	m_signed_reward = 0;
 }
 
-void Pacman::performAction(action_t action) {
+void Pacman::printMap(){
 	
+	printf("\n");
+	for (int curx = 0; curx < dimx; curx++){
+		
+		for (int cury = 0; cury < dimy; cury++){
+			printf("%d", map[curx][cury]);
+		}
+		printf("\n");
+	}
+}
+
+void Pacman::reset(){
+	//Read map in from file
+	//std::ifstream pacmap options["mapfile"];
+	std::ifstream pacmap ("pacman.map");
+	std::string nextline;
+	
+	getline(pacmap,nextline);
+	dimx = atoi(nextline.c_str());
+	getline(pacmap,nextline);
+	dimy = atoi(nextline.c_str());
+	getline(pacmap,nextline);
+	numghosts = atoi(nextline.c_str());
+	
+	// Allocate memory for map
+	map = new tile_t*[dimx];
+	for (int i = 0; i < dimx; i++){
+		map[i] = new tile_t[dimy];
+	}
+	// Allocate memory for ghosts
+	ghosts = new ghostinfo_t[numghosts];
+	
+	//Read in map tiles
+	foodleft = 0;
+	powertime = 0;
+	int ghostcount = 0;
+	char curtile = 0;
+	
+	for (int curx = 0; curx < dimx; curx++){
+		getline(pacmap,nextline);
+		
+		for (int cury = 0; cury < dimy; cury++){
+			curtile = nextline[cury];
+			
+			// Quickest and easiest way to convert char to int
+			map[curx][cury] = (tile_t) (curtile - 48);
+			if (map[curx][cury] == EMPTY){
+				//50% chance to be food in empty square
+				if (randRange(2) == 1){
+					map[curx][cury] = FOOD;
+					foodleft++;
+				}
+			}
+			else if (map[curx][cury] == PACMAN){
+				pacman.x = curx;
+				pacman.y = cury;
+			}
+			else if (map[curx][cury] == GHOST){
+				ghosts[ghostcount].pos.x = curx;
+				ghosts[ghostcount].pos.y = cury;
+				ghosts[ghostcount].pursue = 0;
+				ghosts[ghostcount].cooldown = 0;
+				ghosts[ghostcount].alive = true;
+				ghostcount++;
+			}
+		}
+	}
+	
+	printMap();
+	
+	//Other initial variables
+	power = false;
+	
+	// Set up the initial observation
+	m_observation = setObservation();	
+}
+
+
+//walls
+#define W_UP 0
+#define W_RIGHT 1
+#define W_DOWN 2
+#define W_LEFT 3
+//food line of sight
+#define F_UP 4
+#define F_RIGHT 5
+#define F_DOWN 6
+#define F_LEFT 7
+//pill
+#define POWERED 8
+//smells
+#define S_2 9
+#define S_3 10
+#define S_4 11
+//ghost line of sight
+#define G_UP 12
+#define G_RIGHT 13
+#define G_DOWN 14
+#define G_LEFT 15
+
+//runs more computation than strictly necessary
+//but this makes the code clear and concise
+percept_t Pacman::setObservation(){
+	short observation = 0;
+	
+	//walls
+	observation = observation | ((validSquare(makeMove(pacman,UP)) ? 1 : 0) << W_UP);
+	observation = observation | ((validSquare(makeMove(pacman,RIGHT)) ? 1 : 0) << W_RIGHT);
+	observation = observation | ((validSquare(makeMove(pacman,DOWN)) ? 1 : 0) << W_DOWN);
+	observation = observation | ((validSquare(makeMove(pacman,LEFT)) ? 1 : 0) << W_LEFT);
+	
+	//food line of sight
+	observation = observation | ((lineOfSight(pacman,UP,FOOD) ? 1 : 0) << W_UP);
+	observation = observation | ((lineOfSight(pacman,RIGHT,FOOD) ? 1 : 0) << W_RIGHT);
+	observation = observation | ((lineOfSight(pacman,DOWN,FOOD) ? 1 : 0) << W_DOWN);
+	observation = observation | ((lineOfSight(pacman,LEFT,FOOD) ? 1 : 0) << W_LEFT);
+	
+	//pill
+	observation = observation | ((power ? 1 : 0) << POWERED);
+	
+	//smells (for distances 2,3,4)
+	if (manhattanSearch(pacman,NONE,NONE, 2, FOOD)){
+		//push up binary 111
+		observation = observation | (5 << S_2);
+	} else if (manhattanSearch(pacman,NONE,NONE, 3, FOOD)){
+		//push up binary 11
+		observation = observation | (3 << S_3);
+	} else if (manhattanSearch(pacman,NONE,NONE, 4, FOOD)){
+		//push up binary 1
+		observation = observation | (1 << S_4);		
+	}
+	
+	//ghost line of sight
+	observation = observation | ((lineOfSight(pacman,UP,GHOST) ? 1 : 0) << G_UP);
+	observation = observation | ((lineOfSight(pacman,RIGHT,GHOST) ? 1 : 0) << G_RIGHT);
+	observation = observation | ((lineOfSight(pacman,DOWN,GHOST) ? 1 : 0) << G_DOWN);
+	observation = observation | ((lineOfSight(pacman,LEFT,GHOST) ? 1 : 0) << G_LEFT);
+	
+	return (percept_t) observation;
+}
+
+Pacman::direction_t Pacman::manhattanSearch(coord_t curcoord, direction_t camefrom, direction_t wentto, int dist, tile_t seeking){
+	//check if found it
+	if (testSquare(curcoord,seeking)){
+		return wentto;
+	}
+	//check if max depth
+	if (dist == 0){
+		return NONE;
+	}
+	
+	direction_t searchresult;
+	
+	if (validSquare(makeMove(curcoord, UP)) && (camefrom != UP)){
+		searchresult = manhattanSearch(makeMove(curcoord, UP), DOWN, UP, dist-1, seeking);
+		if (searchresult != NONE){
+			return searchresult;
+		}
+	}
+	if (validSquare(makeMove(curcoord, RIGHT)) && camefrom != RIGHT){
+		searchresult = manhattanSearch(makeMove(curcoord, RIGHT), LEFT, RIGHT, dist-1, seeking);		
+		if (searchresult != NONE){
+			return searchresult;
+		}
+	}
+	if (validSquare(makeMove(curcoord, DOWN)) && camefrom != DOWN){
+		searchresult = manhattanSearch(makeMove(curcoord, DOWN), UP, DOWN, dist-1, seeking);		
+		if (searchresult != NONE){
+			return searchresult;
+		}
+	}
+	if (validSquare(makeMove(curcoord, LEFT)) && camefrom != LEFT){
+		searchresult = manhattanSearch(makeMove(curcoord, LEFT), RIGHT, LEFT, dist-1, seeking);
+		return searchresult;
+	}
+}
+
+bool Pacman::lineOfSight(coord_t curcoord, direction_t direction, tile_t seeking){
+	//check if found it
+	coord_t sightcoord;
+	sightcoord.x = curcoord.x;
+	sightcoord.y = curcoord.y;
+	
+	sightcoord = makeMove(sightcoord,direction);	
+	while (validSquare(sightcoord)){
+		if (testSquare(sightcoord, seeking))
+			return true;
+		
+		sightcoord = makeMove(sightcoord,direction);
+	}
+	return false;
+}
+
+Pacman::coord_t Pacman::makeMove(coord_t coord, direction_t move){
+	coord_t result;
+	switch (move){
+		case UP:
+			result.x = coord.x;
+			result.y = coord.y-1;
+			break;
+		case RIGHT:
+			result.x = coord.x+1;
+			result.y = coord.y;
+			break;
+		case DOWN:
+			result.x = coord.x;
+			result.y = coord.y+1;
+			break;
+		case LEFT:
+			result.x = coord.x-1;
+			result.y = coord.y;
+			break;
+		default:
+			printf("makeMove error: Unhandled case");
+			assert(false);
+	}
+	
+	//Modulus wraps numbers which are too large
+	result.x = result.x % dimx;
+	//Add dimension to disallow negative numbers
+	//(Modulus does not always take care of this in C)
+	if (result.x < 0)
+		result.x = result.x + dimx;
+	
+	result.y = result.y % dimy;
+	if (result.y < 0)
+		result.y = result.y + dimy;
+	
+	return result;
+}
+
+bool Pacman::validSquare(coord_t coord){
+	return map[coord.x][coord.y] != 1;
+}
+
+
+bool Pacman::testSquare(coord_t coord, tile_t seeking){
+	switch(seeking){
+		case(FOOD):
+			return (map[coord.x][coord.y] == FOOD || map[coord.x][coord.y] == FOODANDGHOST);
+		case(GHOST):
+			return (map[coord.x][coord.y] == GHOST || map[coord.x][coord.y] == FOODANDGHOST
+				|| map[coord.x][coord.y] == PILLANDGHOST);
+		case(PILL):
+			return (map[coord.x][coord.y] == PILL || map[coord.x][coord.y] == PILLANDGHOST);
+		case(PACMAN):
+			return (map[coord.x][coord.y] == PACMAN);
+	}
+}
+
+//Reward constants
+#define COMPLETE 100
+#define FOODREWARD 10
+#define MOVEREWARD -1
+#define WALLREWARD -10
+#define GHOSTREWARD -50
+
+//Behavioural constants
+#define SHORT_DURATION 10
+#define COOLDOWN 10
+#define AGRESSIVEDIST 5
+#define PILLDURATION 40
+void Pacman::performAction(action_t action) {
+	direction_t newaction = (direction_t) action;
+	m_signed_reward = 0;
+	
+	//Make pacman's move
+	coord_t newsquare = makeMove(pacman,newaction);
+	if (!(validSquare(newsquare))){
+		m_signed_reward += WALLREWARD;
+	} else {
+		//we've moved
+		m_signed_reward += MOVEREWARD;
+		map[pacman.x][pacman.y] = EMPTY;
+		pacman.x = newsquare.x;
+		pacman.y = newsquare.y;
+		
+		//test running into a ghost
+		if(testSquare(newsquare, GHOST)){
+			if (power){
+				//kill the ghost
+				for (int i = 0; i < numghosts; i++){
+					if (ghosts[i].alive && ghosts[i].pos.x == pacman.x && ghosts[i].pos.y == pacman.y){
+						ghosts[i].alive = false;
+					}
+				}
+				
+			} else {
+				//we die
+				m_signed_reward += GHOSTREWARD;
+				reset();
+				return;
+			}
+		}
+		
+		//test eating food
+		if(testSquare(newsquare, FOOD)){
+			m_signed_reward += FOODREWARD;
+			foodleft--;
+			if (foodleft == 0){
+				//eaten everything
+				reset();
+				return;
+			}			
+		} else if(testSquare(newsquare, PILL)){
+			power = true;
+			powertime = PILLDURATION;
+		}
+		
+		map[pacman.x][pacman.y] = PACMAN;
+	}
+	
+	//Make ghost moves
+	for (int i = 0; i < numghosts; i++){
+		if (ghosts[i].alive){
+			
+			//decide on move
+			direction_t ghostmove = NONE;
+			
+			if (ghosts[i].cooldown == 0){
+				//hunting down pacman behaviour
+				ghostmove = manhattanSearch(ghosts[i].pos, NONE, NONE, AGRESSIVEDIST, PACMAN);
+				
+				if (ghosts[i].pursue > 0)
+					ghosts[i].pursue--;
+					if (ghosts[i].pursue == 0){
+						ghosts[i].cooldown = COOLDOWN;
+					}
+				else if (ghostmove != NONE){
+					ghosts[i].pursue = SHORT_DURATION;
+				}
+			} else ghosts[i].cooldown--;
+				
+			if (ghostmove == NONE){
+				//random move
+				ghostmove = randomMove(ghosts[i].pos);
+			}
+			//pick new coord
+			coord_t newcoord = makeMove(ghosts[i].pos, ghostmove);
+			
+			//make the move
+			if (newcoord.x == pacman.x && newcoord.y == pacman.y){
+				if (power){
+					//kill the ghost
+					ghosts[i].alive = false;
+				} else {
+					//we die
+					m_signed_reward += GHOSTREWARD;
+					reset();
+					return;
+				}
+			}
+			//move on the board
+			ghostMove(ghosts[i].pos, newcoord);
+			//update ghost info
+			ghosts[i].pos.x = newcoord.x;
+			ghosts[i].pos.y = newcoord.y;
+		}
+	}
+	
+	//End of action ticks
+	if (power){
+		powertime--;
+		if (powertime == 0)
+			power = false;
+	}
+}
+
+Pacman::direction_t Pacman::randomMove(coord_t coord){
+	direction_t possiblemoves[4];
+	int nummoves = 0;
+	
+	if (validSquare(makeMove(coord,UP))){
+		possiblemoves[nummoves] = UP;
+		nummoves++;
+	}
+	if (validSquare(makeMove(coord,RIGHT))){
+		possiblemoves[nummoves] = RIGHT;
+		nummoves++;
+		
+	}
+	if (validSquare(makeMove(coord,DOWN))){
+		possiblemoves[nummoves] = DOWN;
+		nummoves++;
+		
+	}
+	if (validSquare(makeMove(coord,LEFT))){
+		possiblemoves[nummoves] = LEFT;
+		nummoves++;
+		
+	}
+	
+	return possiblemoves[randRange(nummoves)];
+}
+
+void Pacman::ghostMove(coord_t from, coord_t to){
+	switch(map[from.x][from.y]){
+		case GHOST:
+			map[from.x][from.y] = EMPTY;
+			break;
+		case PILLANDGHOST:
+			map[from.x][from.y] = PILL;
+			break;
+		case FOODANDGHOST:
+			map[from.x][from.y] = FOOD;
+			break;
+		case EMPTY:
+		case WALL:
+			printf("Trying to move ghost out of square where there is no ghost!\n");
+		default:
+			//unlikely but possible that two ghosts occupied the same square
+			//do nothing
+			break;
+	}
+	
+	switch(map[to.x][to.y]){
+		case PILL:
+			map[to.x][to.y] = PILLANDGHOST;
+			break;
+		case FOOD:
+			map[to.x][to.y] = FOODANDGHOST;
+			break;
+		case FOODANDGHOST:
+			map[to.x][to.y] = FOODANDGHOST;
+			break;
+		case PILLANDGHOST:
+			map[to.x][to.y] = PILLANDGHOST;
+			break;
+		case PACMAN:
+			//if we reach this spot, this ghost must be dead (otherwise the game would've ended)
+			break;
+		default:
+			map[to.x][to.y] = GHOST;
+	}
 }

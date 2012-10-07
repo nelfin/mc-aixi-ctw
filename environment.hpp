@@ -115,14 +115,55 @@ private:
 
 class Pacman : public Environment {
 public:
+	
+	void printMap();
 
 	// set up the initial environment percept
 	Pacman(options_t &options);
 
 	// receives the agent's action and calculates the new environment percept
 	void performAction(action_t action);
+	
+	percept_t getReward(void) const { return (percept_t) m_signed_reward + 61; }
 private:
-	char *map;
+	
+	enum direction_t{UP = 0, RIGHT = 1, DOWN = 2, LEFT = 3, NONE = 4};
+	enum tile_t{EMPTY = 0, WALL = 1, PILL = 2, GHOST = 3, PACMAN = 4, FOOD = 5, FOODANDGHOST = 6, PILLANDGHOST};
+	
+	struct coord_t {
+		int x;
+		int y;
+	};
+	
+	struct ghostinfo_t {
+		coord_t pos;
+		int pursue;
+		int cooldown;
+		bool alive;
+	};
+	
+	void reset();
+	
+	percept_t setObservation();
+	bool lineOfSight(coord_t curcoord, direction_t direction, tile_t seeking);
+	direction_t manhattanSearch
+		(coord_t curcoord, direction_t camefrom, direction_t wentto, int dist, tile_t seeking);
+		coord_t makeMove(coord_t coord, direction_t move);
+	void ghostMove(coord_t from, coord_t to);
+	direction_t randomMove(coord_t coord);
+	bool validSquare(coord_t coord);
+	bool testSquare(coord_t coord, tile_t seeking);
+	
+	tile_t **map;
+	int foodleft;
+	int dimx;
+	int dimy;
+	int numghosts;
+	
+	ghostinfo_t *ghosts;	
+	coord_t pacman;
+	bool power;
+	int powertime;
 };
 
 #endif // __ENVIRONMENT_HPP__

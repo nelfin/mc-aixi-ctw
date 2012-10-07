@@ -234,7 +234,10 @@ int main(int argc, char *argv[]) {
 		// TODO: instantiate "env" (if appropriate)
 	}
 	else if (environment_name == "pacman") {
-		// TODO: instantiate "env" (if appropriate)
+		env = new Pacman(options);
+		options["agent-actions"] = "4";
+		options["observation-bits"] = "16";
+		options["reward-bits"] = "8";
 	}
 	else {
 		std::cerr << "ERROR: unknown environment '" << environment_name << "'" << std::endl;
