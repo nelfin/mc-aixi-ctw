@@ -52,3 +52,35 @@ extern action_t search(Agent &agent) {
 
 }
 
+// determine the next action to play
+action_t SearchNode::selectAction(Agent &agent) const {
+    // req: a search tree \Psi
+    // req: a history h
+    // req: an exploration/exploitation constant C
+}
+
+// perform a sample run through this node and it's children,
+// returning the accumulated reward from this sample run
+reward_t SearchNode::sample(Agent &agent, unsigned int dfr) {
+    // req: a search tree \Psi
+    // req: a history h
+    // req: a remaining search horizon m
+    // XXX: is dfr = m?
+    reward_t reward;
+    if (dfr == 0) {
+        return reward_t(0.0);
+    } else if (m_chance_node) {
+        // chance node business
+    } else if (m_visits == 0) {
+        reward = playout(agent, dfr);
+    } else {
+        // not a chance node, pick a maximising action
+        action_t a = selectAction(agent);
+        // agent.modelUpdate(a) // ??
+        return sample(agent, dfr);
+    }
+    // double v_hat = (reward + m_visits*v_hat)/double(m_visits + 1));
+    // XXX: v_hat = m_mean ?
+    m_visits++;
+    return reward;
+}
