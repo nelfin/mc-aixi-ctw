@@ -78,7 +78,7 @@ void mainLoop(Agent &ai, Environment &env, options_t &options) {
 				action = 2;	
 			} else if (userinput[0] == 'a'){
 				action = 3;	
-			} else action = atoi(userinput);
+			} else action = atoi(userinput[0]);
 		}
 		
 		// proper code structure

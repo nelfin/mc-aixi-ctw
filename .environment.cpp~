@@ -516,7 +516,7 @@ bool Pacman::testSquare(coord_t coord, tile_t seeking){
 #define SHORT_DURATION 10
 #define COOLDOWN 10
 #define AGRESSIVEDIST 5
-#define PILLDURATION 40
+#define PILLDURATION 400
 void Pacman::performAction(action_t action) {
 	direction_t newaction = (direction_t) action;
 	m_signed_reward = 0;
