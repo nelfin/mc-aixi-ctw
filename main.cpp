@@ -260,7 +260,10 @@ int main(int argc, char *argv[]) {
 		options["reward-bits"] = "1";
 	}
 	else if (environment_name == "kuhn-poker") {
-		// TODO: instantiate "env" (if appropriate)
+		env = new KuhnPoker(options);
+		options["agent-actions"] = "2";
+		options["observation-bits"] = "3";
+		options["reward-bits"] = "2";
 	}
 	else if (environment_name == "pacman") {
 		env = new Pacman(options);

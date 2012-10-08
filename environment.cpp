@@ -81,7 +81,7 @@ void Tiger::performAction(action_t action) {
 			m_observation = m_gold_door;
 		}
 	} else {
-		if (action == m_gold_door) {
+		if (action == m_gold_door) { // Chooses the door with the gold
 			m_signed_reward = 10;
 		} else {
 			m_signed_reward = -100;
@@ -189,6 +189,116 @@ void RPS::performAction(action_t action) {
 		logFile << "result: Environment won with " << m_observation << " (reward " << m_signed_reward << ")" << std::endl;
 	}
 	//logFile << "played: " << m_observation << " vs agent's " << action << std::endl;
+	
+}
+
+/* Kuhn Poker environment:
+
+actions
+	Pass: 0
+	Bet: 1
+
+observation (Player Card, Opponent Action)
+	Player Card
+		Jack: 0
+		Queen: 1
+		King: 2
+	Opponent Action
+		Pass: 0
+		Bet: 1
+
+reward: (Pot - Investment)
+
+NOTE: 
+Add an alternate environment which includes as an observation the 
+outcome of the previous round (Opponent Reveal, Player Card, Opponent Action)
+	Opponent Reveal
+		Jack: 0
+		Queen: 1
+		King: 2
+		Fold: 3 (no showdown)	
+*/
+
+KuhnPoker::KuhnPoker(options_t &options) {
+
+	m_opponent_card = randRange(3); 		// Random number 0 = Jack, 1 = Queen, 2 = King 
+	if (randRange(2) == 1){	// 50-50 chance of getting the either of the remaining cards
+		m_player_card =  (m_opponent_card + 1) % 3; 	
+	} else {
+		m_player_card =  (m_opponent_card + 2) % 3; 	
+	}
+	
+	// Implement strategy for opponent (bet|pass given m_opponent_card)
+	// OPPONENT CHOOSES RANDOMLY FOR NOW
+	m_opponent_action = randRange(2); // Randomly chooses to pass (0) or bet (1)
+
+	// m_observation = (m_player_card, m_opponent_action);
+	m_observation = 2*m_player_card + m_opponent_action; // Does this operation seem correct?
+	m_signed_reward = 0;
+	
+}
+void KuhnPoker::performAction(action_t action) {
+
+	// Initialise temporary variables
+	m_win_flag = false;
+	m_pot = 2;
+	m_investment = 1;
+	
+	// Action is either bet (1) or pass (0)
+	if (m_opponent_action == 0){ // opponent passes
+		if (action == 0){ // player pass (investment = blind = 1)
+			// SHOWDOWN
+			m_win_flag = (m_player_card > m_opponent_card);
+		} else { // player bet (investment = 2)
+			m_pot++;
+			m_investment++;
+			// Opponent gets to bet
+			// OPPONENT CHOOSES RANDOMLY FOR NOW
+			if (randRange(2) == 0) { // Opponent passes again
+				// Player wins - NO SHOWDOWN
+				m_win_flag = true;
+			} else { // Opponent bets
+				m_pot++;
+				// SHOWDOWN
+				m_win_flag = (m_player_card > m_opponent_card);
+			}
+		}	
+	} else { // Opponent bets
+		m_pot++;
+		if (action == 0){ // player pass (investment = blind = 1)
+			// Opponent wins - NO SHOWDOWN
+			m_win_flag = false;
+		} else { // player bet
+			m_pot++;
+			m_investment++;
+			// SHOWDOWN
+			m_win_flag = (m_player_card > m_opponent_card);
+		}	
+	}
+
+	// REWARD
+	if (m_win_flag){ // Player wins
+		m_signed_reward = m_pot - m_investment;
+	} else {
+		m_signed_reward = 0 - m_investment;
+	}
+	
+	m_opponent_card = randRange(3); 		// Random number 0 = Jack, 1 = Queen, 2 = King 
+	if (randRange(2) == 1){	// 50-50 chance of getting the either of the remaining cards
+		m_player_card =  (m_opponent_card + 1) % 3; 	
+	} else {
+		m_player_card =  (m_opponent_card + 2) % 3; 	
+	}
+	
+	// Implement strategy for opponent (bet|pass given m_opponent_card)
+	// OPPONENT CHOOSES RANDOMLY FOR NOW
+	m_opponent_action = randRange(2); // Randomly chooses to pass (0) or bet (1)
+	
+	// OBSERVE
+	// Player Card 		= m_player_card
+	// Opponent Action 	= m_opponent_action
+	// m_observation = (m_player_card, m_opponent_action);
+	m_observation = 2*m_player_card + m_opponent_action; // Does this operation seem correct?
 	
 }
 

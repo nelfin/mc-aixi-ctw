@@ -113,6 +113,60 @@ private:
 	bool m_previous_rock_win; //whether the environment won the last game with rock
 };
 
+/* Kuhn Poker environment:
+
+actions
+	Pass: 0
+	Bet: 1
+
+observation (Player Card, Opponent Action)
+	Player Card
+		Jack: 0
+		Queen: 1
+		King: 2
+	Opponent Action
+		Pass: 0
+		Bet: 1
+
+reward: (Pot - Investment)
+
+NOTE: 
+Add an alternate environment which includes as an observation the 
+outcome of the previous round (Opponent Reveal, Player Card, Opponent Action)
+	Opponent Reveal
+		Jack: 0
+		Queen: 1
+		King: 2
+		Fold: 3 (no showdown)	
+*/
+
+class KuhnPoker : public Environment {
+public:
+	KuhnPoker(options_t &options);
+	
+	virtual void performAction(action_t action);
+	
+	percept_t getReward(void) const { return (percept_t) m_signed_reward + 2; }
+
+private:
+	unsigned int m_opponent_action;
+	unsigned int m_opponent_card;
+	unsigned int m_player_card;
+	
+	// Following are temporary variables used only within the scope of 
+	// performAction and they do need to persist over different
+	// calls to the function - Do they need to be class variables?
+	unsigned int m_pot;
+	unsigned int m_investment;
+	bool m_win_flag;
+	
+	//Inherited:
+	//action_t m_last_action;  // the last action performed by the agent
+	//percept_t m_observation; // the current observation
+	//percept_t m_reward;      // the current reward
+	//int m_signed_reward;
+};
+
 class Pacman : public Environment {
 public:
 	
