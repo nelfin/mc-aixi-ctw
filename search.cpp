@@ -100,7 +100,7 @@ reward_t SearchNode::sample(Agent &agent, unsigned int dfr) {
             m_child[ob_r] = new SearchNode(false);
         }
         // Create node \Psi(hor) if T(hor) = 0, i.e. it doesn't exist
-        reward = sample(agent, dfr - 1); // + agent.decodeReward(ob_r); // ?
+        reward = m_child[ob_r]->sample(agent, dfr - 1); // + agent.decodeReward(ob_r); // ?
     } else if (m_visits == 0) {
         reward = playout(agent, dfr);
     } else {
