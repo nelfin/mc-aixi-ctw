@@ -16,6 +16,7 @@ class SearchNode {
 public:
 
 	SearchNode(bool is_chance_node);
+	~SearchNode(void);
 
 	// determine the next action to play
 	action_t selectAction(Agent &agent) const; // TODO: implement
@@ -61,17 +62,17 @@ extern action_t search(Agent &agent) {
 
 }
 
-void SearchNode::SearchNode(bool chance)
+SearchNode::SearchNode(bool chance) :
     m_chance_node(chance),
     m_mean(0.0),
-    m_visits(0),
+    m_visits(0)
 {
     // some m_child-ren maybe?
 }
 
-void SearchNode::~SearchNode(bool chance) {
-    for (i = 0; i < m_child.size(); i++) {
-        // delete m_child[i];
+SearchNode::~SearchNode(void) {
+    for (int i = 0; i < 16; i++) {
+        delete m_child[i];
     }
 }
 
@@ -94,13 +95,13 @@ reward_t SearchNode::sample(Agent &agent, unsigned int dfr) {
         return reward_t(0.0);
     } else if (m_chance_node) {
         // chance node business
-        percept_t ob_r = agent.genPerceptAndUpdate();
-        // I'm stuck as to whether I can separate these two
-        if (child(ob_r) == NULL) {
-            m_child[ob_r] = new SearchNode(false);
-        }
+        percept_t ob, r;
+        agent.genPerceptAndUpdate(&ob, &r);
         // Create node \Psi(hor) if T(hor) = 0, i.e. it doesn't exist
-        reward = m_child[ob_r]->sample(agent, dfr - 1); // + agent.decodeReward(ob_r); // ?
+        if (child(ob) == NULL) {
+            m_child[ob] = new SearchNode(false);
+        }
+        reward = r + m_child[ob]->sample(agent, dfr - 1);
     } else if (m_visits == 0) {
         reward = playout(agent, dfr);
     } else {
