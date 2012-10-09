@@ -95,14 +95,17 @@ action_t Agent::genAction(void) const {
 // generate a percept distributed according
 // to our history statistics
 void Agent::genPercept(percept_t *observation, percept_t *reward) {
-	return NULL; // TODO: implement
+    *observation = percept_t(0);
+    *reward = percept_t(0);
 }
 
 
 // generate a percept distributed to our history statistics, and
 // update our mixture environment model with it
 void Agent::genPerceptAndUpdate(percept_t *observation, percept_t *reward) {
-	return NULL; // TODO: implement
+    *observation = percept_t(0);
+    *reward = percept_t(0);
+    modelUpdate(*observation, *reward);
 }
 
 
