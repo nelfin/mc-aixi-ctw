@@ -55,7 +55,16 @@ private:
 // simulate a path through a hypothetical future for the agent within it's
 // internal model of the world, returning the accumulated reward.
 static reward_t playout(Agent &agent, unsigned int playout_len) {
-	return 0; // TODO: implement
+    reward_t reward = 0.0;
+    action_t a;
+    percept_t ob, r;
+    for (unsigned int i = 0; i < playout_len; i++) {
+        a = agent.genAction();
+        agent.modelUpdate(a);
+        agent.genPerceptAndUpdate(&ob, &r);
+        reward += reward_t(r);
+    }
+    return reward;
 }
 
 // determine the best action by searching ahead using MCTS
