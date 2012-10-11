@@ -59,7 +59,7 @@ static reward_t playout(Agent &agent, unsigned int playout_len) {
     action_t a;
     percept_t ob, r;
     for (unsigned int i = 0; i < playout_len; i++) {
-        a = agent.genAction();
+        a = agent.genRandomAction();
         agent.modelUpdate(a);
         agent.genPerceptAndUpdate(&ob, &r);
         reward += reward_t(r);
