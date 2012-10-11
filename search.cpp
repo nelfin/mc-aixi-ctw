@@ -2,8 +2,9 @@
 
 #include "agent.hpp"
 
-typedef unsigned long long visits_t;
+#include <map>
 
+typedef unsigned long long visits_t;
 
 // search options
 static const visits_t     MinVisitsBeforeExpansion = 1;
@@ -15,6 +16,7 @@ class SearchNode {
 
 public:
 
+    SearchNode();
 	SearchNode(bool is_chance_node);
 	~SearchNode(void);
 
@@ -34,11 +36,7 @@ public:
 	visits_t visits(void) const { return m_visits; }
 
     // return pointer to child corresponding to action/percept
-    const SearchNode *child(unsigned int aor) const { return m_child[aor]; }
-    // NOTE: action_t and percept_t are both typedef unsigned int, but how do
-    // we tell action_t(0) apart from percept_t(0)? Dammit.  I guess chance
-    // nodes should always be preceded by an action and vice versa, but
-    // goddamit this isn't type-safe. What's the point!?
+    const SearchNode *child(unsigned int aor) const;
 
 private:
 
@@ -46,14 +44,27 @@ private:
 	double m_mean;      // the expected reward of this node
 	visits_t m_visits;  // number of times the search node has been visited
 
-    // how many children should there be?
-    SearchNode *m_child[16];
+    // NOTE: action_t and percept_t are both typedef unsigned int, but how do
+    // we tell action_t(0) apart from percept_t(0)? Dammit.  I guess chance
+    // nodes should always be preceded by an action and vice versa, but
+    // goddamit this isn't type-safe. What's the point!?
+    typedef std::map<unsigned int, SearchNode> m_child_t;
+    m_child_t m_child;
 };
 
 // simulate a path through a hypothetical future for the agent within it's
 // internal model of the world, returning the accumulated reward.
 static reward_t playout(Agent &agent, unsigned int playout_len) {
-	return 0; // TODO: implement
+    reward_t reward = 0.0;
+    action_t a;
+    percept_t ob, r;
+    for (unsigned int i = 0; i < playout_len; i++) {
+        a = agent.genRandomAction();
+        agent.modelUpdate(a);
+        agent.genPerceptAndUpdate(&ob, &r);
+        reward += reward_t(r);
+    }
+    return reward;
 }
 
 // determine the best action by searching ahead using MCTS
@@ -70,10 +81,24 @@ SearchNode::SearchNode(bool chance) :
     // some m_child-ren maybe?
 }
 
+SearchNode::SearchNode() :
+    m_chance_node(false),
+    m_mean(0.0),
+    m_visits(0)
+{
+}
+
 SearchNode::~SearchNode(void) {
-    for (int i = 0; i < 16; i++) {
-        delete m_child[i];
+    // do I have to delete m_child?
+}
+
+// return pointer to child corresponding to action/percept
+const SearchNode* SearchNode::child(unsigned int aor) const {
+    m_child_t::const_iterator it = m_child.find(aor);
+    if (it == m_child.end()) {
+        return NULL;
     }
+    return &(it->second);
 }
 
 // determine the next action to play
@@ -81,6 +106,9 @@ action_t SearchNode::selectAction(Agent &agent) const {
     // req: a search tree \Psi
     // req: a history h
     // req: an exploration/exploitation constant C
+    // This is a decision node, therefore the children of this node should be
+    // indexed by actions. We iterate through them to find the ones which have
+    // not been expanded (or somehow expanded but not visited).
     return action_t(0);
 }
 
@@ -101,7 +129,7 @@ reward_t SearchNode::sample(Agent &agent, unsigned int dfr) {
         if (child(ob) == NULL) {
             m_child[ob] = new SearchNode(false);
         }
-        reward = r + m_child[ob]->sample(agent, dfr - 1);
+        reward = r + m_child[ob].sample(agent, dfr - 1);
     } else if (m_visits == 0) {
         reward = playout(agent, dfr);
     } else {
@@ -111,7 +139,7 @@ reward_t SearchNode::sample(Agent &agent, unsigned int dfr) {
         if (child(a) == NULL) {
             m_child[a] = new SearchNode(true);
         }
-        reward = m_child[a]->sample(agent, dfr);
+        reward = m_child[a].sample(agent, dfr);
     }
     m_mean = (reward + double(m_visits)*m_mean) /
         (double(m_visits) + 1.0);
