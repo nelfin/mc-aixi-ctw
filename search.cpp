@@ -116,8 +116,8 @@ action_t SearchNode::selectAction(Agent &agent) const {
     // indexed by actions. We iterate through them to find the ones which have
     // not been expanded (or somehow expanded but not visited).
     const double norm_factor = double(agent.horizon() * agent.maxReward());
-    double unexplored_score = 0.0;
-    double explored_score = 0.0;
+    double unexplored_score = -1.0;
+    double explored_score = -1.0;
     bool exists_unexplored_actions = false;
     action_t best_action;
 
