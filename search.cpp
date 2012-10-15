@@ -1,8 +1,10 @@
 #include "search.hpp"
 
 #include "agent.hpp"
+#include "util.hpp"
 
 #include <map>
+#include <cmath>
 
 typedef unsigned long long visits_t;
 
@@ -10,6 +12,9 @@ typedef unsigned long long visits_t;
 static const visits_t     MinVisitsBeforeExpansion = 1;
 static const unsigned int MaxDistanceFromRoot  = 100;
 //static size_t             MaxSearchNodes;
+
+// UCB bound constants
+static const double C = 1.0;
 
 // contains information about a single "state"
 class SearchNode {
@@ -69,8 +74,35 @@ static reward_t playout(Agent &agent, unsigned int playout_len) {
 
 // determine the best action by searching ahead using MCTS
 extern action_t search(Agent &agent) {
-	return agent.genRandomAction(); // TODO: implement
-
+    SearchNode *root = new SearchNode(false);
+    const int simulations = agent.numSimulations();
+    for (int i = 0; i < simulations; i++) {
+        // should we be throwing away the accumulated reward of the run that
+        // sample generates?
+        root->sample(agent, agent.horizon());
+    }
+    action_t best_action;
+    double best_score = -1.0;
+    for (action_t a = 0; a < agent.numActions(); a++) {
+        const SearchNode *ha = root->child(a);
+        if (NULL == ha) {
+            // Why was this node not explored is a more important question.
+            // Should this be an assert?
+            continue;
+        }
+        double score = ha->expectation();
+        if (score > best_score) {
+            best_score = score;
+            best_action = a;
+        }
+    }
+    // Hopefully we're not leaking too much memory.
+    delete root;
+    if (best_score < 0.0) {
+        return agent.genRandomAction();
+    } else {
+        return best_action;
+    }
 }
 
 SearchNode::SearchNode(bool chance) :
@@ -106,10 +138,41 @@ action_t SearchNode::selectAction(Agent &agent) const {
     // req: a search tree \Psi
     // req: a history h
     // req: an exploration/exploitation constant C
+    //
     // This is a decision node, therefore the children of this node should be
     // indexed by actions. We iterate through them to find the ones which have
     // not been expanded (or somehow expanded but not visited).
-    return action_t(0);
+    const double norm_factor = double(agent.horizon() * agent.maxReward());
+    double unexplored_score = -1.0;
+    double explored_score = -1.0;
+    bool exists_unexplored_actions = false;
+    action_t best_action;
+
+    for (action_t a = 0; a < agent.numActions(); a++) {
+        // XXX: What is the complexity of this lookup? Is there a better way
+        // of doing this?
+        const SearchNode *ha = child(a);
+        if (NULL == ha || ha->visits() == 0) {
+            // unexplored
+            exists_unexplored_actions = true;
+            double score = rand01();
+            if (score > unexplored_score) {
+                unexplored_score = score;
+                best_action = a;
+            }
+        } else if (!exists_unexplored_actions) {
+            // Don't bother if we've found an unexplored action, they always
+            // take precedence
+            double win_value = ha->expectation() / norm_factor;
+            double ucb_bound = C * sqrt(log(visits()) / ha->visits());
+            double score = win_value + ucb_bound;
+            if (score > explored_score) {
+                explored_score = score;
+                best_action = a;
+            }
+        }
+    }
+    return best_action;
 }
 
 // perform a sample run through this node and it's children,
