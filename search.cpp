@@ -74,8 +74,35 @@ static reward_t playout(Agent &agent, unsigned int playout_len) {
 
 // determine the best action by searching ahead using MCTS
 extern action_t search(Agent &agent) {
-	return agent.genRandomAction(); // TODO: implement
-
+    SearchNode *root = new SearchNode(false);
+    const int simulations = agent.numSimulations();
+    for (int i = 0; i < simulations; i++) {
+        // should we be throwing away the accumulated reward of the run that
+        // sample generates?
+        root->sample(agent, agent.horizon());
+    }
+    action_t best_action;
+    double best_score = -1.0;
+    for (action_t a = 0; a < agent.numActions(); a++) {
+        const SearchNode *ha = root->child(a);
+        if (NULL == ha) {
+            // Why was this node not explored is a more important question.
+            // Should this be an assert?
+            continue;
+        }
+        double score = ha->expectation();
+        if (score > best_score) {
+            best_score = score;
+            best_action = a;
+        }
+    }
+    // Hopefully we're not leaking too much memory.
+    delete root;
+    if (best_score < 0.0) {
+        return agent.genRandomAction();
+    } else {
+        return best_action;
+    }
 }
 
 SearchNode::SearchNode(bool chance) :
