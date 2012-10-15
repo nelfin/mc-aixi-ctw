@@ -77,6 +77,8 @@ public:
 	// get the agent's probability of receiving a particular percept
 	double perceptProbability(percept_t observation, percept_t reward) const; // TODO: implement in agent.cpp
 
+    int numSimulations(void) const;
+
 private:
 	// action sanity check
 	bool isActionOk(action_t action) const;
@@ -97,6 +99,7 @@ private:
 	unsigned int m_obs_bits;     // number of bits to represent an observation
 	unsigned int m_rew_bits;     // number of bits to represent a reward
 	size_t m_horizon;            // length of the search horizon
+	int m_simulations;           // number of Monte Carlo simulations
 
 	// Context Tree representing the agent's beliefs
 	ContextTree *m_ct;

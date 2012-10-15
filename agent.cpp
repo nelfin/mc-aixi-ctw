@@ -13,6 +13,7 @@ Agent::Agent(options_t & options) {
 
 	strExtract(options["agent-actions"], m_actions);
 	strExtract(options["agent-horizon"], m_horizon);
+	strExtract(options["mc-simulations"], m_simulations);
 	strExtract(options["observation-bits"], m_obs_bits);
 	strExtract<unsigned int>(options["reward-bits"], m_rew_bits);
 
@@ -30,6 +31,10 @@ Agent::Agent(options_t & options) {
 // destruct the agent and the corresponding context tree
 Agent::~Agent(void) {
 	if (m_ct) delete m_ct;
+}
+
+int Agent::numSimulations(void) const {
+    return m_simulations;
 }
 
 
