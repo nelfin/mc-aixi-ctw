@@ -219,24 +219,64 @@ outcome of the previous round (Opponent Reveal, Player Card, Opponent Action)
 		Fold: 3 (no showdown)	
 */
 
-KuhnPoker::KuhnPoker(options_t &options) {
+#define JACK 0
+#define QUEEN 1
+#define KING 2
 
-	m_opponent_card = randRange(3); 		// Random number 0 = Jack, 1 = Queen, 2 = King 
-	if (randRange(2) == 1){	// 50-50 chance of getting the either of the remaining cards
-		m_player_card =  (m_opponent_card + 1) % 3; 	
-	} else {
-		m_player_card =  (m_opponent_card + 2) % 3; 	
+KuhnPoker::KuhnPoker(options_t &options) {
+	gamma = 0.5;
+	if (options.count("gamma") > 0) {
+		strExtract(options["gamma"], gamma);
 	}
+	alpha =  gamma / 3.0;
+	beta = (1+gamma) / 3.0;	
+
+	dealCards();
 	
 	// Implement strategy for opponent (bet|pass given m_opponent_card)
-	// OPPONENT CHOOSES RANDOMLY FOR NOW
-	m_opponent_action = randRange(2); // Randomly chooses to pass (0) or bet (1)
-
+	m_opponent_action = getFirstNashAction();
+	std::cout << "Opponent chose action "<< m_opponent_action <<std::endl;
+	
 	// m_observation = (m_player_card, m_opponent_action);
 	m_observation = 2*m_player_card + m_opponent_action; // Does this operation seem correct?
 	m_signed_reward = 0;
 	
 }
+
+int KuhnPoker::getFirstNashAction() {
+    if(m_opponent_card==JACK){
+        return rand01() < alpha ? 1 : 0;
+    }
+    if(m_opponent_card==QUEEN){
+        return 0;
+    }
+    if(m_opponent_card==KING){
+        return rand01() < gamma ? 1 : 0;
+    }
+}
+
+int KuhnPoker::getSecondNashAction() {
+    if(m_opponent_card==JACK){
+        return 0;
+    }
+    if(m_opponent_card==QUEEN){
+        return rand01() < beta ? 1 : 0;
+    }
+    if(m_opponent_card==KING){
+        return 1;
+    }
+}
+
+void KuhnPoker::dealCards() {
+    m_opponent_card = randRange(3); 		// Random number 0 = Jack, 1 = Queen, 2 = King 
+	if (randRange(2) == 1){	// 50-50 chance of getting the either of the remaining cards
+		m_player_card =  (m_opponent_card + 1) % 3; 	
+	} else {
+		m_player_card =  (m_opponent_card + 2) % 3; 	
+	}
+	std::cout << "Player has card "<< m_player_card <<std::endl;
+}
+
 void KuhnPoker::performAction(action_t action) {
 
 	// Initialise temporary variables
@@ -253,8 +293,9 @@ void KuhnPoker::performAction(action_t action) {
 			m_pot++;
 			m_investment++;
 			// Opponent gets to bet
-			// OPPONENT CHOOSES RANDOMLY FOR NOW
-			if (randRange(2) == 0) { // Opponent passes again
+			int opponent_second_action = getSecondNashAction();
+			std::cout << "Opponent's second action was "<< opponent_second_action <<std::endl;
+			if (opponent_second_action == 0) { // Opponent passes again
 				// Player wins - NO SHOWDOWN
 				m_win_flag = true;
 			} else { // Opponent bets
@@ -279,21 +320,18 @@ void KuhnPoker::performAction(action_t action) {
 	// REWARD
 	if (m_win_flag){ // Player wins
 		m_signed_reward = m_pot - m_investment;
+		std::cout << "Opponent had card "<< m_opponent_card << ", player had card " << m_player_card << " so player won" <<std::endl;
 	} else {
 		m_signed_reward = 0 - m_investment;
+		std::cout << "Opponent had card "<< m_opponent_card << ", player had card " << m_player_card << " so opponent won" <<std::endl;
 	}
+	std::cout << "Player reward " << m_signed_reward <<std::endl;
 	
-	m_opponent_card = randRange(3); 		// Random number 0 = Jack, 1 = Queen, 2 = King 
-	if (randRange(2) == 1){	// 50-50 chance of getting the either of the remaining cards
-		m_player_card =  (m_opponent_card + 1) % 3; 	
-	} else {
-		m_player_card =  (m_opponent_card + 2) % 3; 	
-	}
+	dealCards();
 	
 	// Implement strategy for opponent (bet|pass given m_opponent_card)
-	// OPPONENT CHOOSES RANDOMLY FOR NOW
-	m_opponent_action = randRange(2); // Randomly chooses to pass (0) or bet (1)
-	
+	m_opponent_action = getFirstNashAction(); // Randomly chooses to pass (0) or bet (1)
+	std::cout << "Opponent chose action "<< m_opponent_action <<std::endl;
 	// OBSERVE
 	// Player Card 		= m_player_card
 	// Opponent Action 	= m_opponent_action
