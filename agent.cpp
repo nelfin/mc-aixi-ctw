@@ -100,18 +100,31 @@ action_t Agent::genAction(void) const {
 // generate a percept distributed according
 // to our history statistics
 void Agent::genPercept(percept_t *observation, percept_t *reward) {
-    *observation = percept_t(0);
-    *reward = percept_t(0);
+  symbol_list_t percept;
+  size_t totalBits = m_rew_bits + m_obs_bits;
+  
+  m_ct->genRandomSymbols(percept, totalBits);
+  *reward = decodeReward(percept);
+  for (unsigned int i = 0; i < m_rew_bits; i++) {
+    percept.pop_back();
+  }
+  *observation = decodeObservation(percept);
+   
 }
 
 
 // generate a percept distributed to our history statistics, and
 // update our mixture environment model with it
 void Agent::genPerceptAndUpdate(percept_t *observation, percept_t *reward) {
-    *observation = percept_t(0);
-    *reward = percept_t(0);
-    modelUpdate(*observation, *reward);
-
+  symbol_list_t percept;
+  size_t totalBits = m_rew_bits + m_obs_bits;
+  
+  m_ct->genRandomSymbolsAndUpdate(percept, totalBits);
+  *reward = decodeReward(percept);
+  for (unsigned int i = 0; i < m_rew_bits; i++) {
+    percept.pop_back();
+  }
+  *observation = decodeObservation(percept);
 }
 
 
@@ -213,7 +226,12 @@ void Agent::encodePercept(symbol_list_t &symlist, percept_t observation, percept
 	encode(symlist, reward, m_rew_bits);
 }
 
-// Decodes the observation from a list of symbols
+// New function to decode observation from a list of symbols
+percept_t Agent::decodeObservation(const symbol_list_t &symlist) const {
+  return decode(symlist, m_obs_bits);
+}
+
+// Decodes the s/observation/action from a list of symbols
 action_t Agent::decodeAction(const symbol_list_t &symlist) const {
 	return decode(symlist, m_actions_bits);
 }

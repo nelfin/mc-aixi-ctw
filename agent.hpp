@@ -89,6 +89,7 @@ private:
 	// encoding/decoding actions and percepts to/from symbol lists
 	void encodeAction(symbol_list_t &symlist, action_t action) const;
 	void encodePercept(symbol_list_t &symlist, percept_t observation, percept_t reward) const;
+  percept_t decodeObservation(const symbol_list_t &symlist) const;
 	action_t decodeAction(const symbol_list_t &symlist) const;
 	percept_t decodeReward(const symbol_list_t &symlist) const;
 
