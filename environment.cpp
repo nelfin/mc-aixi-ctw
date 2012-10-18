@@ -303,18 +303,16 @@ void KuhnPoker::performAction(action_t action) {
 }
 
 //Pacman environment
-/*#define EMPTY 0
-#define WALL 1
-#define PILL 2
-#define GHOST 3
-#define PACMAN 4
-#define FOOD 5*/
 
 Pacman::Pacman(options_t &options) {
 	reset();
+	// Initial observation setup
+	m_observation = setObservation();	
 	m_signed_reward = 0;
 }
 
+//Debug method to show the map
+//Also fun
 void Pacman::printMap(){
 	
 	printf("\n");
@@ -323,41 +321,32 @@ void Pacman::printMap(){
 		for (int curx = 0; curx < dimx; curx++){
 			switch (map[curx][cury]){
 				case WALL:
-					//printf("\033[0m(%2d,%2d)\033[42m  ", curx, cury);
 					printf("\033[42m ");
 					break;
 				case EMPTY:
-					//printf("\033[0m(%2d,%2d)\033[47m  ", curx, cury);
 					printf("\033[47m ");
 					break;
 				case FOOD:
-					//printf("\033[0m(%2d,%2d)\033[46m  ", curx, cury);
 					printf("\033[46m ");
 					break;
 				case PACMAN:
 					if (power){
-						//printf("\033[0m(%2d,%2d)\033[45m  ", curx, cury);
 						printf("\033[45m ");
 					} else {
-						//printf("\033[0m(%2d,%2d)\033[43m  ", curx, cury);
 						printf("\033[43m ");
 					}
 					break;
 				case GHOST:
 				case PILLANDGHOST:
 				case FOODANDGHOST:
-					//printf("\033[0m(%2d,%2d)\033[41m  ", curx, cury);
 					printf("\033[41m ");
 					break;
 				case PILL:
-					//printf("\033[0m(%2d,%2d)\033[44m  ", curx, cury);
 					printf("\033[44m ");
 					break;
 				default:
 					printf("%d", map[curx][cury]);
 			}
-			
-			//printf("%d", map[curx][cury]);
 		}
 		printf("\033[0m\n");
 	}
@@ -365,7 +354,6 @@ void Pacman::printMap(){
 
 void Pacman::reset(){
 	//Read map in from file
-	//std::ifstream pacmap options["mapfile"];
 	std::ifstream pacmap ("pacman.map");
 	std::string nextline;
 	
@@ -376,7 +364,7 @@ void Pacman::reset(){
 	getline(pacmap,nextline);
 	numghosts = atoi(nextline.c_str());
 	
-	// Allocate memory for map
+	// Allocate and clear memory for map
 	map = new tile_t*[dimx];
 	for (int i = 0; i < dimx; i++){
 		map[i] = new tile_t[dimy];
@@ -396,8 +384,8 @@ void Pacman::reset(){
 		for (int curx = 0; curx < dimx; curx++){
 			curtile = nextline[curx];
 			
-			// Quickest and easiest way to convert char to int
-			map[curx][cury] = (tile_t) (curtile - 48);
+			// Convert from char to tile_t
+			map[curx][cury] = (tile_t) (curtile - '0');
 			if (map[curx][cury] == EMPTY){
 				//50% chance to be food in empty square
 				if (randRange(2) == 1){
@@ -410,6 +398,7 @@ void Pacman::reset(){
 				pacman.y = cury;
 			}
 			else if (map[curx][cury] == GHOST){
+			    //Initialise ghost information
 				ghosts[ghostcount].pos.x = curx;
 				ghosts[ghostcount].pos.y = cury;
 				ghosts[ghostcount].pursue = 0;
@@ -424,9 +413,6 @@ void Pacman::reset(){
 	
 	//Other initial variables
 	power = false;
-	
-	// Set up the initial observation
-	m_observation = setObservation();	
 }
 
 
@@ -452,8 +438,6 @@ void Pacman::reset(){
 #define G_DOWN 14
 #define G_LEFT 15
 
-//runs more computation than strictly necessary
-//but this makes the code clear and concise
 percept_t Pacman::setObservation(){
 	short observation = 0;
 	
@@ -496,9 +480,7 @@ percept_t Pacman::setObservation(){
 Pacman::direction_t Pacman::manhattanSearch(coord_t curcoord, direction_t camefrom, direction_t wentto, int dist, tile_t seeking){
 	//check if found it
 	if (testSquare(curcoord,seeking)){
-		if (seeking == PACMAN)
-			//printf("I SEE YOU at %d, %d\n", curcoord.x, curcoord.y);
-		return wentto;
+	    return wentto;
 	}
 	//check if max depth
 	if (dist == 0){
@@ -507,35 +489,28 @@ Pacman::direction_t Pacman::manhattanSearch(coord_t curcoord, direction_t camefr
 	
 	direction_t searchresult;
 	
+	//Check each direction, if there is a move which sees the target, return it
 	if (validSquare(makeMove(curcoord, UP)) && (camefrom != UP)){
 		searchresult = manhattanSearch(makeMove(curcoord, UP), DOWN, UP, dist-1, seeking);
 		if (searchresult != NONE){
-			if (seeking == PACMAN)
-				//printf("I SEE YOU if I go %d from (%d, %d))\n", searchresult, curcoord.x, curcoord.y);
 			return UP;
 		}
 	}
 	if (validSquare(makeMove(curcoord, RIGHT)) && camefrom != RIGHT){
 		searchresult = manhattanSearch(makeMove(curcoord, RIGHT), LEFT, RIGHT, dist-1, seeking);		
 		if (searchresult != NONE){
-			if (seeking == PACMAN)
-				//printf("I SEE YOU if I go %d from (%d, %d))\n", searchresult, curcoord.x, curcoord.y);
 			return RIGHT;
 		}
 	}
 	if (validSquare(makeMove(curcoord, DOWN)) && camefrom != DOWN){
 		searchresult = manhattanSearch(makeMove(curcoord, DOWN), UP, DOWN, dist-1, seeking);		
 		if (searchresult != NONE){
-			if (seeking == PACMAN)
-				//printf("I SEE YOU if I go %d from (%d, %d))\n", searchresult, curcoord.x, curcoord.y);
 			return DOWN;
 		}
 	}
 	if (validSquare(makeMove(curcoord, LEFT)) && camefrom != LEFT){
 		searchresult = manhattanSearch(makeMove(curcoord, LEFT), RIGHT, LEFT, dist-1, seeking);
 		if (searchresult != NONE){
-			if (seeking == PACMAN)
-				//printf("I SEE YOU if I go %d from (%d, %d))\n", searchresult, curcoord.x, curcoord.y);
 			return LEFT;
 		}
 	}
@@ -543,11 +518,11 @@ Pacman::direction_t Pacman::manhattanSearch(coord_t curcoord, direction_t camefr
 }
 
 bool Pacman::lineOfSight(coord_t curcoord, direction_t direction, tile_t seeking){
-	//check if found it
 	coord_t sightcoord;
 	sightcoord.x = curcoord.x;
 	sightcoord.y = curcoord.y;
 	
+	//Keep moving in direction until we see what we're after or hit a wall
 	sightcoord = makeMove(sightcoord,direction);	
 	while (validSquare(sightcoord)){
 		if (testSquare(sightcoord, seeking))
@@ -560,6 +535,7 @@ bool Pacman::lineOfSight(coord_t curcoord, direction_t direction, tile_t seeking
 
 Pacman::coord_t Pacman::makeMove(coord_t coord, direction_t move){
 	coord_t result;
+	//Move and return coord
 	switch (move){
 		case UP:
 			result.x = coord.x;
@@ -578,7 +554,7 @@ Pacman::coord_t Pacman::makeMove(coord_t coord, direction_t move){
 			result.y = coord.y;
 			break;
 		default:
-			printf("makeMove error: Unhandled case");
+			printf("Error: makeMove unhandled case");
 			assert(false);
 	}
 	
@@ -596,11 +572,12 @@ Pacman::coord_t Pacman::makeMove(coord_t coord, direction_t move){
 	return result;
 }
 
+//Valid/walkable square if not wall
 bool Pacman::validSquare(coord_t coord){
-	return map[coord.x][coord.y] != 1;
+	return map[coord.x][coord.y] != WALL;
 }
 
-
+//Test if square contains the object sought
 bool Pacman::testSquare(coord_t coord, tile_t seeking){
 	switch(seeking){
 		case(FOOD):
@@ -618,6 +595,7 @@ bool Pacman::testSquare(coord_t coord, tile_t seeking){
 //Reward constants
 #define COMPLETE 100
 #define FOODREWARD 10
+#define GHOSTEATREWARD 30
 #define MOVEREWARD -1
 #define WALLREWARD -10
 #define GHOSTREWARD -50
@@ -636,39 +614,43 @@ void Pacman::performAction(action_t action) {
 	if (!(validSquare(newsquare))){
 		m_signed_reward += WALLREWARD;
 	} else {
-		//we've moved
+	    //Perform the move
 		m_signed_reward += MOVEREWARD;
 		map[pacman.x][pacman.y] = EMPTY;
 		pacman.x = newsquare.x;
 		pacman.y = newsquare.y;
 		
-		//test running into a ghost
+		//Check landing square
+		
+		//Running into a ghost
 		if(testSquare(newsquare, GHOST)){
 			if (power){
-				//kill the ghost
+				//Pacman kills ghost
 				for (int i = 0; i < numghosts; i++){
 					if (ghosts[i].alive && ghosts[i].pos.x == pacman.x && ghosts[i].pos.y == pacman.y){
 						ghosts[i].alive = false;
+				        m_signed_reward += GHOSTEATREWARD;
 					}
 				}
-				
 			} else {
-				//we die
+				//Ghost kills pacman
 				m_signed_reward += GHOSTREWARD;
 				reset();
 				return;
 			}
 		}
 		
-		//test eating food
+		//Eating food
 		if(testSquare(newsquare, FOOD)){
 			m_signed_reward += FOODREWARD;
 			foodleft--;
 			if (foodleft == 0){
-				//eaten everything
+				//Eaten everything, gameover
+			    m_signed_reward += COMPLETE;
 				reset();
 				return;
-			}			
+			}
+		//Eating power pill
 		} else if(testSquare(newsquare, PILL)){
 			power = true;
 			powertime = PILLDURATION;
@@ -681,60 +663,54 @@ void Pacman::performAction(action_t action) {
 	for (int i = 0; i < numghosts; i++){
 		if (ghosts[i].alive){
 			
-			//decide on move
 			direction_t ghostmove = NONE;
 			
+			//If not on cooldown
 			if (ghosts[i].cooldown == 0){
-				//hunting down pacman behaviour
+				//Search for pacman
+				//Ghostmove will become NONE or a move towards pacman
 				ghostmove = manhattanSearch(ghosts[i].pos, NONE, NONE, AGRESSIVEDIST, PACMAN);
 				
+				//Manage pursuit time and cooldown
 				if (ghosts[i].pursue > 0){
-					//printf("%i has %d more pursuits\n", i, ghosts[i].pursue);
 					ghosts[i].pursue--;
 					if (ghosts[i].pursue == 0){
 						ghosts[i].cooldown = COOLDOWN;
 					}
 				} else if (ghostmove != NONE){
 					ghosts[i].pursue = SHORT_DURATION;
-					//printf("%d found and chasing for %d\n", i, ghosts[i].pursue);
 				}
 			} else ghosts[i].cooldown--;
-			
-			coord_t tmppos;
-			tmppos.x = ghosts[i].pos.x;
-			tmppos.y = ghosts[i].pos.y;
 				
+			//If can't smell pacman
 			if (ghostmove == NONE){
-				//random move
+				//Make a random move
 				ghostmove = randomMove(ghosts[i].pos);
-				//printf("ghost %d making random move %d\n", i, ghostmove);
-			} else {
-				//printf("ghost %d seeking with move %d\n", i, ghostmove);
 			}
-			//pick new coord
+			//Advance position
 			coord_t newcoord = makeMove(ghosts[i].pos, ghostmove);
 			
-			//make the move
+			//Check if ghost lands on pacman
 			if (newcoord.x == pacman.x && newcoord.y == pacman.y){
 				if (power){
-					//kill the ghost
+					//Pacman kills ghost
 					ghosts[i].alive = false;
 				} else {
-					//we die
+					//Pacman dies
 					m_signed_reward += GHOSTREWARD;
 					reset();
 					return;
 				}
 			}
-			//move on the board
+			//Perform move
 			ghostMove(ghosts[i].pos, newcoord);
-			//update ghost info
+			//Update ghost info
 			ghosts[i].pos.x = newcoord.x;
 			ghosts[i].pos.y = newcoord.y;
 		}
 	}
 	
-	//End of action ticks
+	//End of action power ticks
 	if (power){
 		powertime--;
 		if (powertime == 0)
@@ -742,12 +718,14 @@ void Pacman::performAction(action_t action) {
 	}
 	
 	printMap();
+	m_observation = setObservation();	
 }
 
 Pacman::direction_t Pacman::randomMove(coord_t coord){
 	direction_t possiblemoves[4];
 	int nummoves = 0;
 	
+	//Add all valid directions to an array
 	if (validSquare(makeMove(coord,UP))){
 		possiblemoves[nummoves] = UP;
 		nummoves++;
@@ -768,6 +746,7 @@ Pacman::direction_t Pacman::randomMove(coord_t coord){
 		
 	}
 	
+	//Returns a random filled element of the array
 	return possiblemoves[randRange(nummoves)];
 }
 
@@ -783,7 +762,7 @@ void Pacman::ghostMove(coord_t from, coord_t to){
 			map[from.x][from.y] = FOOD;
 			break;
 		case WALL:
-			printf("Trying to move ghost out of square where there is a wall!\n");
+			printf("Error: Trying to move ghost out of square where there is a wall!\n");
 			printf("%d, %d has a %d\n", from.x, from.y, map[from.x][from.y]);
 		case EMPTY:
 		default:
@@ -809,7 +788,7 @@ void Pacman::ghostMove(coord_t from, coord_t to){
 			//if we reach this spot, this ghost must be dead (otherwise the game would've ended)
 			break;
 		case WALL:
-			printf("Ghost trying to move into a wall!\n");
+			printf("Error: Ghost trying to move into a wall!\n");
 			printf("%d, %d has a %d\n", to.x, to.y, map[to.x][to.y]);
 		default:
 			map[to.x][to.y] = GHOST;
