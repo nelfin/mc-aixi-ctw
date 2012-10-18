@@ -153,6 +153,15 @@ private:
 	unsigned int m_opponent_card;
 	unsigned int m_player_card;
 	
+	double alpha;
+	double beta;
+	double gamma; //The variable that defines the nash equilibrium strategy
+	
+	void dealCards();
+	
+	int getFirstNashAction();
+	int getSecondNashAction();
+	
 	// Following are temporary variables used only within the scope of 
 	// performAction and they do need to persist over different
 	// calls to the function - Do they need to be class variables?
