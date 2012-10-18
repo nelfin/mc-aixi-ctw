@@ -111,6 +111,7 @@ void Agent::genPerceptAndUpdate(percept_t *observation, percept_t *reward) {
     *observation = percept_t(0);
     *reward = percept_t(0);
     modelUpdate(*observation, *reward);
+
 }
 
 
@@ -138,7 +139,7 @@ void Agent::modelUpdate(action_t action) {
 	// Update internal model
 	symbol_list_t action_syms;
 	encodeAction(action_syms, action);
-	m_ct->update(action_syms);
+	m_ct->updateHistory(action_syms);
 	// m_history is updated by ContextTree::update
 
 	m_time_cycle++;
@@ -149,7 +150,18 @@ void Agent::modelUpdate(action_t action) {
 // revert the agent's internal model of the world
 // to that of a previous time cycle, false on failure
 bool Agent::modelRevert(const ModelUndo &mu) {
-	return NULL; // TODO: implement
+
+  try {
+    assert(mu.age() <= age());
+    assert(mu.historySize() <= historySize());
+  }
+  catch (char *str) {
+    return false; // yay exception handling!!
+  }
+  m_time_cycle = mu.age();
+  m_total_reward = mu.reward();
+  m_ct->revertHistory(mu.historySize());
+  return true;
 }
 
 

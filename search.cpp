@@ -60,6 +60,7 @@ private:
 // simulate a path through a hypothetical future for the agent within it's
 // internal model of the world, returning the accumulated reward.
 static reward_t playout(Agent &agent, unsigned int playout_len) {
+    ModelUndo *mu = new ModelUndo(agent); 
     reward_t reward = 0.0;
     action_t a;
     percept_t ob, r;
@@ -69,6 +70,7 @@ static reward_t playout(Agent &agent, unsigned int playout_len) {
         agent.genPerceptAndUpdate(&ob, &r);
         reward += reward_t(r);
     }
+    agent.modelRevert(*mu);
     return reward;
 }
 
@@ -178,6 +180,8 @@ action_t SearchNode::selectAction(Agent &agent) const {
 // perform a sample run through this node and it's children,
 // returning the accumulated reward from this sample run
 reward_t SearchNode::sample(Agent &agent, unsigned int dfr) {
+  ModelUndo *mu = new ModelUndo(agent);  
+  
     // req: a search tree \Psi (in agent)
     // req: a history h (also in agent)
     // req: a remaining search horizon m (dfr)
@@ -207,5 +211,6 @@ reward_t SearchNode::sample(Agent &agent, unsigned int dfr) {
     m_mean = (reward + double(m_visits)*m_mean) /
         (double(m_visits) + 1.0);
     m_visits++;
+    agent.modelRevert(*mu);
     return reward;
 }
