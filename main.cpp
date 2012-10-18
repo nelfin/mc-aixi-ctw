@@ -60,36 +60,36 @@ void mainLoop(Agent &ai, Environment &env, options_t &options) {
 		
 		//DEBUGGING NOTE: SET THIS FLAG
 		
-		bool random = false;
+		// bool random = false;
 		
-		if (random){
-			action = ai.genRandomAction();			
-		} else {
-			//SPECIFY ACTIONS ON COMMAND LINE FOR TESTING
-			//THIS IS SHOCKING CODE, I KNOW
-			char userinput[50];
-			scanf("%s", userinput);
+		// if (random){
+		// 	action = ai.genRandomAction();			
+		// } else {
+		// 	//SPECIFY ACTIONS ON COMMAND LINE FOR TESTING
+		// 	//THIS IS SHOCKING CODE, I KNOW
+		// 	char userinput[50];
+		// 	scanf("%s", userinput);
 			
-			if (userinput[0] == 'w'){
-				action = 0;
-			} else if (userinput[0] == 'd'){
-				action = 1;	
-			} else if (userinput[0] == 's'){
-				action = 2;	
-			} else if (userinput[0] == 'a'){
-				action = 3;	
-			} else action = atoi(userinput);
-		}
+		// 	if (userinput[0] == 'w'){
+		// 		action = 0;
+		// 	} else if (userinput[0] == 'd'){
+		// 		action = 1;	
+		// 	} else if (userinput[0] == 's'){
+		// 		action = 2;	
+		// 	} else if (userinput[0] == 'a'){
+		// 		action = 3;	
+		// 	} else action = atoi(userinput);
+		// }
 		
 		// proper code structure
-		/*if (explore && rand01() < explore_rate) {
+		if (explore && rand01() < explore_rate) {
 			explored = true;
 			
-			//action = ai.genRandomAction();	
+			action = ai.genRandomAction();	
 		}
 		else {
-			//action = search(ai); // TODO: implement in search.cpp
-		}*/
+			action = search(ai); // TODO: implement in search.cpp
+		}
 
 		// Send an action to the environment
 		env.performAction(action); // TODO: implement for each environment
@@ -120,7 +120,7 @@ void mainLoop(Agent &ai, Environment &env, options_t &options) {
 				std::cout << "explore rate: " << explore_rate << std::endl;
 			}
 		} else {
-			std::cout << std::endl << std::endl << std::endl;
+		  //std::cout << std::endl << std::endl << std::endl; // WHY DO IT ;___;
 		}
 
 		// Update exploration rate
