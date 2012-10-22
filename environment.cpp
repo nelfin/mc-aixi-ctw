@@ -832,3 +832,147 @@ void Pacman::ghostMove(coord_t from, coord_t to){
 			map[to.x][to.y] = GHOST;
 	}
 }
+
+/* 
+Composite Environments
+*/
+
+// Generic Composite Constructor
+Composite::Composite(options_t &options) {
+	if (options.count("first") > 0 && options.count("second") > 0) {
+		strExtract(options["first"], m_first);
+		strExtract(options["second"], m_second);
+	}
+	if (options.count("changeover") > 0){
+		strExtract(options["changeover"], m_changeover);	
+	}
+
+	// The options must be stored for use in dynamically initialising the second environment
+	m_options = options;
+
+	// Initialise the first environment
+	initialise(m_options, m_first);
+
+	// Initialise the current cycle number - for calculating changeover
+	m_current_cycle = 1;
+	m_prechangeover = true;
+
+	// m_signed_reward=0;
+}
+
+// Generic Composite Action Resolution
+void Composite::performAction(action_t action){
+	if (m_prechangeover){ // before changeover
+		
+		// Resolve action for first environment
+		resolveAction(action, m_first);
+
+		// Check for changeover in next cycle
+		m_current_cycle++;
+		m_prechangeover = (m_current_cycle < m_changeover);
+		if (!m_prechangeover){ // If changeover occurs
+			// Initialise the second environment
+			initialise(m_options, m_second);
+		}
+
+	} else { // after changeover
+
+		// Resolve action for second environment
+		resolveAction(action, m_second);
+
+	}
+}
+
+// Generic initialiser
+void Composite::initialise(options_t &options, int environment){
+	switch(environment){
+	case 0:
+		// Initialise coinflip1
+		// Determine the probability of the coin landing on heads
+		p = 1.0;
+		if (options.count("coin-flip-p") > 0) {
+			strExtract(options["coin-flip-p"], p);
+		}
+		assert(0.0 <= p);
+		assert(p <= 1.0);
+
+		std::cout << "Initialisation p = " << p <<std::endl;
+
+		// Set up the initial observation
+		m_observation = rand01() < p ? 1 : 0;
+		m_signed_reward = 0;
+
+		break;
+	case 1:
+		// Initialise coinflip2
+		// Determine the probability of the coin landing on heads
+		p = 1.0;
+		if (options.count("coin-flip-p2") > 0) {
+			strExtract(options["coin-flip-p2"], p);
+		}
+		assert(0.0 <= p);
+		assert(p <= 1.0);
+
+		std::cout << "Initialisation p = " << p <<std::endl;
+
+		// Set up the initial observation
+		m_observation = rand01() < p ? 1 : 0;
+		m_signed_reward = 0;
+
+		break;
+	case 2:
+		// Initialise Environment 2
+		break;
+	case 3:
+		// Initialise Environment 3
+		break;
+	case 4:
+		// Initialise Environment 4
+		break;
+	default:
+		// Initialise coinflip1 by default
+		// Determine the probability of the coin landing on heads
+		p = 1.0;
+		if (options.count("coin-flip-p") > 0) {
+			strExtract(options["coin-flip-p"], p);
+		}
+		assert(0.0 <= p);
+		assert(p <= 1.0);
+
+		// Set up the initial observation
+		m_observation = rand01() < p ? 1 : 0;
+		m_signed_reward = 0;
+
+		break;
+	}
+}
+
+void Composite::resolveAction(action_t action, int environment){
+	switch(environment){
+	case 0:
+		// Resolve action for coinflip1
+		m_observation = rand01() < p ? 1 : 0;
+		m_signed_reward = action == m_observation ? 1 : 0;
+
+		break;
+	case 1:
+		// Resolve action for coinflip2
+		m_observation = rand01() < p ? 1 : 0;
+		m_signed_reward = action == m_observation ? 1 : 0;
+		break;
+	case 2:
+		// Resolve action for Environment 2
+		break;
+	case 3:
+		// Resolve action for Environment 3
+		break;
+	case 4:
+		// Resolve action for Environment 4
+		break;
+	default:
+		// Resolve action for coinflip by default
+		m_observation = rand01() < p ? 1 : 0;
+		m_signed_reward = action == m_observation ? 1 : 0;
+		break;
+	}
+}

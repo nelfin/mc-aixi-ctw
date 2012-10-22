@@ -229,4 +229,32 @@ private:
 	int powertime;
 };
 
+class Composite : public Environment {
+public:
+	// 
+	Composite(options_t &options);
+	
+	virtual void performAction(action_t action);
+	
+	percept_t getReward(void) const { return (percept_t) m_signed_reward + 0; }
+private:
+	// Private variables go here
+	int m_first;
+	int m_second;
+	int m_changeover;
+	int m_current_cycle;
+	bool m_prechangeover;
+
+	// For keeping track of the options
+	options_t m_options;
+
+	// Environment variables
+
+	// Coin Flip
+	double p; // For storing the chance of heads
+
+	void initialise(options_t &options, int environment);
+	void resolveAction(action_t action, int environment);
+};
+
 #endif // __ENVIRONMENT_HPP__

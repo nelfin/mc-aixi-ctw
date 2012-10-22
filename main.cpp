@@ -266,6 +266,13 @@ int main(int argc, char *argv[]) {
 		options["observation-bits"] = "16";
 		options["reward-bits"] = "8";
 	}
+	else if (environment_name == "composite") {
+		env = new Composite(options);
+		// THE FOLLOWING VALUES ARE FOR TESTING
+		options["agent-actions"] = "2";
+		options["observation-bits"] = "1";
+		options["reward-bits"] = "1";
+	}
 	else {
 		std::cerr << "ERROR: unknown environment '" << environment_name << "'" << std::endl;
 		return -1;
