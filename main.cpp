@@ -54,7 +54,7 @@ void mainLoop(Agent &ai, Environment &env, options_t &options) {
 		percept_t reward = env.getReward();
 
 		// Update agent's environment model with the new percept
-		ai.modelUpdate(observation, reward); // TODO: implement in agent.cpp
+		ai.modelUpdate(observation, reward);
 
 		// Determine best exploitive action, or explore
 		action_t action;
@@ -82,15 +82,15 @@ void mainLoop(Agent &ai, Environment &env, options_t &options) {
 			    action = ai.genRandomAction();	
 		    }
 		    else {
-			    action = search(ai); // TODO: implement in search.cpp
+			    action = search(ai);
 		    }
 		}
 
 		// Send an action to the environment
-		env.performAction(action); // TODO: implement for each environment
+		env.performAction(action);
 
 		// Update agent's environment model with the chosen action
-		ai.modelUpdate(action); // TODO: implement in agent.cpp
+		ai.modelUpdate(action);
 
 		// LogFile this turn
 		logFile << "cycle: " << cycle << std::endl;

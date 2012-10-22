@@ -26,7 +26,7 @@ public:
 	~SearchNode(void);
 
 	// determine the next action to play
-	action_t selectAction(Agent &agent) const; // TODO: implement
+	action_t selectAction(Agent &agent) const;
 
 	// determine the expected reward from this node
 	reward_t expectation(void) const { return m_mean; }
@@ -35,7 +35,7 @@ public:
 
 	// perform a sample run through this node and it's children,
 	// returning the accumulated reward from this sample run
-	reward_t sample(Agent &agent, unsigned int dfr); // TODO: implement
+	reward_t sample(Agent &agent, unsigned int dfr);
 
 	// number of times the search node has been visited
 	visits_t visits(void) const { return m_visits; }
