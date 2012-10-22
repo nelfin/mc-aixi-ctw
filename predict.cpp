@@ -187,7 +187,7 @@ void ContextTree::genRandomSymbolsAndUpdate(symbol_list_t &symbols, size_t bits)
     for (size_t i = 0; i < bits; i++) {
         // generate a symbol
         symbol_t sym = predictNext();
-        symbols[i] = sym;
+        symbols.push_back(sym);
         update(sym);
     }
 }
