@@ -106,6 +106,9 @@ public:
     // number of nodes in the context tree
     size_t size(void) const { return m_root ? m_root->size() : 0; }
 
+    // guess the most likely very next symbol
+    symbol_t predictNext();
+
 
 private:
     history_t m_history; // the agents history

@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cmath> // "log" is a BAD idea dude
+#include "util.hpp"
 
 
 
@@ -161,12 +162,34 @@ void ContextTree::genRandomSymbols(symbol_list_t &symbols, size_t bits) {
 	for (size_t i=0; i < bits; i++) revert();
 }
 
+// guess the next symbol based on our probabilities
+symbol_t ContextTree::predictNext() {
+    // (via discussion with Mayank)
+    // If we don't have enough history then just guess uniformly
+    if (historySize() < depth()) {
+        return (rand01() < 0.5);
+    }
+    // Pr(1 | h)
+    //  = \frac{Pr(h ^ 1)}{Pr(h)}
+    //  = e^{\log{Pr(h ^ 1)} - \log{Pr(h)}}
+    double pr_h = logBlockProbability();
+    update(1);
+    double pr_h1 = logBlockProbability();
+    revert();
+    return rand01() < exp(pr_h - pr_h1);
+}
 
 // generate a specified number of random symbols distributed according to
 // the context tree statistics and update the context tree with the newly
 // generated bits
 void ContextTree::genRandomSymbolsAndUpdate(symbol_list_t &symbols, size_t bits) {
-	// TODO: implement
+    // overwrite the whole symlist?
+    for (size_t i = 0; i < bits; i++) {
+        // generate a symbol
+        symbol_t sym = predictNext();
+        symbols[i] = sym;
+        update(sym);
+    }
 }
 
 
