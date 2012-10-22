@@ -86,14 +86,15 @@ size_t Agent::horizon(void) const {
 
 // generate an action uniformly at random
 action_t Agent::genRandomAction(void) const {
-  //return randRange(m_actions);
-  return 0; // guaranteed to be random
+  return randRange(m_actions);
 }
 
 // generate an action distributed according
 // to our history statistics
 action_t Agent::genAction(void) const {
-	return NULL; // TODO: implement
+    symbol_list_t action_syms;
+    m_ct->genRandomSymbols(action_syms, m_actions_bits);
+    return decodeAction(action_syms);
 }
 
 
