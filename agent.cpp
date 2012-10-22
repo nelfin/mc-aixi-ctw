@@ -125,6 +125,10 @@ void Agent::genPerceptAndUpdate(percept_t *observation, percept_t *reward) {
     percept.pop_back();
   }
   *observation = decodeObservation(percept);
+
+  // Update agent properties
+  m_total_reward += reward;
+  m_last_update_percept = true;
 }
 
 
