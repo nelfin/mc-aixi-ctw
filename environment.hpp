@@ -239,11 +239,16 @@ public:
 	percept_t getReward(void) const { return (percept_t) m_signed_reward + 0; }
 private:
 	// Private variables go here
-	int m_first;
-	int m_second;
-	int m_changeover;
+	int m_environment[10];
+	int m_start[10];
 	int m_current_cycle;
-	bool m_prechangeover;
+	int m_current_environment;
+	int m_last_environment;
+
+	// For extracting the environment sequence and changeover times 
+	std::string environmentCode(int i);
+	std::string startCode(int i);
+
 
 	// For keeping track of the options
 	options_t m_options;

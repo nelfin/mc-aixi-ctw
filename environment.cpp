@@ -839,48 +839,122 @@ Composite Environments
 
 // Generic Composite Constructor
 Composite::Composite(options_t &options) {
-	if (options.count("first") > 0 && options.count("second") > 0) {
-		strExtract(options["first"], m_first);
-		strExtract(options["second"], m_second);
+
+	// Extract environment sequence and changeover times
+	int i;
+	for (i = 0; options.count(environmentCode(i)) > 0 && options.count(startCode(i)) > 0; i++){
+		strExtract(options[environmentCode(i)], m_environment[i]);
+		strExtract(options[startCode(i)], m_start[i]);
 	}
-	if (options.count("changeover") > 0){
-		strExtract(options["changeover"], m_changeover);	
-	}
+	m_last_environment = i - 1;
 
 	// The options must be stored for use in dynamically initialising the second environment
 	m_options = options;
 
 	// Initialise the first environment
-	initialise(m_options, m_first);
+	m_current_environment = 0;
+	initialise(m_options, m_environment[m_current_environment]);
 
 	// Initialise the current cycle number - for calculating changeover
 	m_current_cycle = 1;
-	m_prechangeover = true;
 
-	// m_signed_reward=0;
+}
+
+// These two functions should use integer to string conversion instead 
+// but C++ is bogus
+// The arrays are defined statically too, so whatever
+std::string Composite::environmentCode(int i){
+	switch(i){
+	case 0:
+		return "environment1";
+		break;
+	case 1:
+		return "environment2";
+		break;
+	case 2:
+		return "environment3";
+		break;
+	case 3:
+		return "environment4";
+		break;
+	case 4:
+		return "environment5";
+		break;
+	case 5:
+		return "environment6";
+		break;
+	case 6:
+		return "environment7";
+		break;
+	case 7:
+		return "environment8";
+		break;
+	case 8:
+		return "environment9";
+		break;
+	case 9:
+		return "environment10";
+		break;
+	default:
+		return "do_not_use_this_option";
+		break;
+	}
+}
+
+std::string Composite::startCode(int i){
+	switch(i){
+	case 0:
+		return "start1";
+		break;
+	case 1:
+		return "start2";
+		break;
+	case 2:
+		return "start3";
+		break;
+	case 3:
+		return "start4";
+		break;
+	case 4:
+		return "start5";
+		break;
+	case 5:
+		return "start6";
+		break;
+	case 6:
+		return "start7";
+		break;
+	case 7:
+		return "start8";
+		break;
+	case 8:
+		return "start9";
+		break;
+	case 9:
+		return "start10";
+		break;
+	default:
+		return "do_not_use_this_option";
+		break;
+	}
 }
 
 // Generic Composite Action Resolution
 void Composite::performAction(action_t action){
-	if (m_prechangeover){ // before changeover
-		
+
 		// Resolve action for first environment
-		resolveAction(action, m_first);
+		resolveAction(action, m_environment[m_current_environment]);
 
 		// Check for changeover in next cycle
-		m_current_cycle++;
-		m_prechangeover = (m_current_cycle < m_changeover);
-		if (!m_prechangeover){ // If changeover occurs
-			// Initialise the second environment
-			initialise(m_options, m_second);
+		if (m_current_environment != m_last_environment) { // Cannot change if on the last environment
+			m_current_cycle++; // Keep track of the current cycle until the last environment starts
+			if (m_current_cycle == m_start[m_current_environment + 1]){ // If the next environment should start next cycle
+				// Initialise the next environment
+				m_current_environment++;
+				initialise(m_options, m_environment[m_current_environment]);
+			}
 		}
 
-	} else { // after changeover
-
-		// Resolve action for second environment
-		resolveAction(action, m_second);
-
-	}
 }
 
 // Generic initialiser
