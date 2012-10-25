@@ -1,5 +1,6 @@
 #include "predict.hpp"
 
+#include <string>
 #include <cassert>
 #include <cmath> // "log" is a BAD idea dude
 #include "util.hpp"
@@ -43,12 +44,31 @@ double CTNode::logKTMul(symbol_t sym) const {
 }
 
 
-// create a context tree of specified maximum depth
-ContextTree::ContextTree(size_t depth) :
-	m_root(new CTNode()),
-	m_depth(depth)
-{ return; }
+// // create a context tree of specified maximum depth
+// ContextTree::ContextTree(size_t depth) :
+// 	m_root(new CTNode()),
+// 	m_depth(depth)
+// { return; }
 
+
+// // Let's print some REALLY REALLY PRETTY STRINGS, shall we?
+// std::string CTNode::prettyPrint(int depth) {
+//   std::string answer;
+//   for (int i = 0; i < depth; i++) {
+//     answer.append("  ");
+//   }
+
+//   std::string count0 = static_cast<ostringstream*>( &(ostringstream() << m_count[0]) )->str();
+//   std::string count1 = static_cast<ostringstream*>( &(ostringstream() << m_count[1]) )->str();
+//   answer.append("(" + count0 + "," + count1 + ")\n");
+//   answer.append(m_child[0]->prettyPrint(depth + 1));
+//   answer.append(m_child[1]->prettyPrint(depth + 1));
+//   return answer;
+// }
+
+std::string ContextTree::prettyPrint(void) {
+  return m_root->prettyPrint(0);
+  }
 
 ContextTree::~ContextTree(void) {
 	if (m_root) delete m_root;
@@ -82,10 +102,14 @@ void CTNode::update(symbol_t sym, int depth, history_t history) {
       // apparently "child(h)" isn't const but it is but it isn't
       // GAHAHAHHHAHAHAHAHAHA
     this->m_log_prob_est = this->logKTMul(sym);
+    // this->m_log_prob_weighted = log(0.5) +
+    //   log(exp(this->m_log_prob_est) +
+    // 	  exp(child(0)->logProbWeighted() +
+    // 	      child(1)->logProbWeighted()));
     this->m_log_prob_weighted = log(0.5) +
-      log(exp(this->m_log_prob_est) +
-	  exp(child(0)->logProbWeighted() +
-	      child(1)->logProbWeighted()));
+      log(0.5) + log(m_log_prob_est) +
+      log(1 + exp(m_child[0]->m_log_prob_weighted
+		  + m_child[1]->m_log_prob_weighted - m_log_prob_est));
     this->m_count[sym]++;
     history.push_back(h);
   }
