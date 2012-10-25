@@ -2,6 +2,7 @@
 #define __PREDICT_HPP__
 
 #include <deque>
+#include <string>
 
 #include "main.hpp"
 
@@ -35,6 +36,8 @@ public:
   
 	// number of descendants
 	size_t size(void) const;
+  
+  // std::string prettyPrint(int depth);
 
 private:
 	CTNode(void);
@@ -67,6 +70,9 @@ public:
 	// clear the entire context tree
 	void clear(void);
 
+  // print the entire context tree
+  // std::string prettyPrint(void);				 
+  
     // updates the context tree with a new binary symbol
     void update(symbol_t sym); // TODO: implement in predict.cpp
     void update(const symbol_list_t &symlist); // TODO: implement in predict.cpp
