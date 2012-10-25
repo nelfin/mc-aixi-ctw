@@ -44,11 +44,11 @@ double CTNode::logKTMul(symbol_t sym) const {
 }
 
 
-// // create a context tree of specified maximum depth
-// ContextTree::ContextTree(size_t depth) :
-// 	m_root(new CTNode()),
-// 	m_depth(depth)
-// { return; }
+// create a context tree of specified maximum depth
+ContextTree::ContextTree(size_t depth) :
+	m_root(new CTNode()),
+	m_depth(depth)
+{ return; }
 
 
 // // Let's print some REALLY REALLY PRETTY STRINGS, shall we?
