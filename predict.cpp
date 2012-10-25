@@ -66,9 +66,9 @@ double CTNode::logKTMul(symbol_t sym) const {
 //   return answer;
 // }
 
-std::string ContextTree::prettyPrint(void) {
-  return m_root->prettyPrint(0);
-  }
+// std::string ContextTree::prettyPrint(void) {
+//   return m_root->prettyPrint(0);
+//   }
 
 ContextTree::~ContextTree(void) {
 	if (m_root) delete m_root;
