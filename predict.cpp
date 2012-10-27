@@ -1,5 +1,7 @@
 #include "predict.hpp"
 
+#include <iostream>
+#include <iomanip>
 #include <string>
 #include <cassert>
 #include <cmath> // "log" is a BAD idea dude
@@ -55,12 +57,16 @@ ContextTree::ContextTree(size_t depth) :
 std::string CTNode::prettyPrintNode(int depth) {
 	std::string answer;
 	for (int i = 0; i < depth; i++) {
-		answer.append("  ");
+		answer.append("\t");
 	}
 
 	std::string count0 = static_cast<std::ostringstream*>( &(std::ostringstream() << m_count[0]) )->str();
 	std::string count1 = static_cast<std::ostringstream*>( &(std::ostringstream() << m_count[1]) )->str();
-	answer.append("(" + count0 + "," + count1 + ")\n");
+	std::ostringstream double_to_str_stream;
+	double_to_str_stream << std::setprecision(3) << m_log_prob_est;
+	std::string log_prob_weighted_string =double_to_str_stream.str();
+
+	answer.append(log_prob_weighted_string+": (" + count0 + "," + count1 + ")\n");
 	if(m_child[0] != NULL)
 		answer.append(m_child[0]->prettyPrintNode(depth + 1));
 	if(m_child[1] != NULL)
