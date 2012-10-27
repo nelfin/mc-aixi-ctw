@@ -15,8 +15,8 @@
 #define DEBUGMODE false
 
 // Streams for logging
-std::ofstream logFile;        // A verbose human-readable log
-std::ofstream compactLog; // A compact comma-separated value log
+std::ofstream logFile;		// A verbose human-readable log
+std::ofstream compactLog;	// A compact comma-separated value log
 
 // The main agent/environment interaction loop
 void mainLoop(Agent &ai, Environment &env, options_t &options) {
@@ -75,15 +75,15 @@ void mainLoop(Agent &ai, Environment &env, options_t &options) {
 		 		action = 3;	
 		 	} else action = atoi(userinput);
 		} else {		
-		    // proper code structure
-		    if (explore && rand01() < explore_rate) {
-			    explored = true;
+			// proper code structure
+			if (explore && rand01() < explore_rate) {
+				explored = true;
 			
-			    action = ai.genRandomAction();	
-		    }
-		    else {
-			    action = search(ai);
-		    }
+				action = ai.genRandomAction();	
+			}
+			else {
+				action = search(ai);
+			}
 		}
 
 		// Send an action to the environment
@@ -111,6 +111,7 @@ void mainLoop(Agent &ai, Environment &env, options_t &options) {
 		if ((cycle & (cycle - 1)) == 0) {
 			std::cout << "cycle: " << cycle << std::endl;
 			std::cout << "average reward: " << ai.averageReward() << std::endl;
+			std::cout << "agent CTW tree: " << std::endl << ai.prettyPrintContextTree() << std::endl;
 			if (explore) {
 				std::cout << "explore rate: " << explore_rate << std::endl;
 			}
@@ -196,7 +197,7 @@ int main(int argc, char *argv[]) {
 	// Default configuration values
 	options["ct-depth"] = "3";
 	options["agent-horizon"] = "16";
-	options["exploration"] = "0";     // do not explore
+	options["exploration"] = "0";	 // do not explore
 	options["explore-decay"] = "1.0"; // exploration rate does not decay
 
 	// Read configuration options

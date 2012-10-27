@@ -33,8 +33,13 @@ Agent::~Agent(void) {
 	if (m_ct) delete m_ct;
 }
 
+// print out the agent's context tree
+std::string Agent::prettyPrintContextTree() const {
+	return m_ct->prettyPrint();
+}
+
 int Agent::numSimulations(void) const {
-    return m_simulations;
+	return m_simulations;
 }
 
 
@@ -51,7 +56,7 @@ reward_t Agent::reward(void) const {
 
 // the average reward received by the agent at each time step
 reward_t Agent::averageReward(void) const {
-    return age() > 0 ? reward() / reward_t(age()) : 0.0;
+	return age() > 0 ? reward() / reward_t(age()) : 0.0;
 }
 
 // maximum reward in a single time instant
@@ -92,9 +97,9 @@ action_t Agent::genRandomAction(void) const {
 // generate an action distributed according
 // to our history statistics
 action_t Agent::genAction(void) const {
-    symbol_list_t action_syms;
-    m_ct->genRandomSymbols(action_syms, m_actions_bits);
-    return decodeAction(action_syms);
+	symbol_list_t action_syms;
+	m_ct->genRandomSymbols(action_syms, m_actions_bits);
+	return decodeAction(action_syms);
 }
 
 
@@ -107,7 +112,7 @@ void Agent::genPercept(percept_t *observation, percept_t *reward) {
   m_ct->genRandomSymbols(percept, totalBits);
   *reward = decodeReward(percept);
   for (unsigned int i = 0; i < m_rew_bits; i++) {
-    percept.pop_back();
+	percept.pop_back();
   }
   *observation = decodeObservation(percept);
    
@@ -123,7 +128,7 @@ void Agent::genPerceptAndUpdate(percept_t *observation, percept_t *reward) {
   m_ct->genRandomSymbolsAndUpdate(percept, totalBits);
   *reward = decodeReward(percept);
   for (unsigned int i = 0; i < m_rew_bits; i++) {
-    percept.pop_back();
+	percept.pop_back();
   }
   *observation = decodeObservation(percept);
 
@@ -170,11 +175,11 @@ void Agent::modelUpdate(action_t action) {
 bool Agent::modelRevert(const ModelUndo &mu) {
 
   try {
-    assert(mu.age() <= age());
-    assert(mu.historySize() <= historySize());
+	assert(mu.age() <= age());
+	assert(mu.historySize() <= historySize());
   }
   catch (char *str) {
-    return false; // yay exception handling!!
+	return false; // yay exception handling!!
   }
   m_time_cycle = mu.age();
   m_total_reward = mu.reward();
@@ -189,7 +194,6 @@ void Agent::reset(void) {
 	m_time_cycle = 0;
 	m_total_reward = 0.0;
 }
-
 
 // probability of selecting an action according to the
 // agent's internal model of it's own behaviour
@@ -212,7 +216,7 @@ bool Agent::isActionOk(action_t action) const {
 
 // reward sanity check
 bool Agent::isRewardOk(reward_t reward) const {
-    return reward >= minReward() && reward <= maxReward();
+	return reward >= minReward() && reward <= maxReward();
 }
 
 
@@ -251,8 +255,8 @@ percept_t Agent::decodeReward(const symbol_list_t &symlist) const {
 // used to revert an agent to a previous state
 ModelUndo::ModelUndo(const Agent &agent) {
 
-    m_age          = agent.age();
-    m_reward       = agent.reward();
-    m_history_size = agent.historySize();
+	m_age		  = agent.age();
+	m_reward	   = agent.reward();
+	m_history_size = agent.historySize();
 
 }

@@ -244,31 +244,31 @@ KuhnPoker::KuhnPoker(options_t &options) {
 }
 
 int KuhnPoker::getFirstNashAction() {
-    if(m_opponent_card==JACK){
-        return rand01() < alpha ? 1 : 0;
-    }
-    if(m_opponent_card==QUEEN){
-        return 0;
-    }
-    if(m_opponent_card==KING){
-        return rand01() < gamma ? 1 : 0;
-    }
+	if(m_opponent_card==JACK){
+		return rand01() < alpha ? 1 : 0;
+	}
+	if(m_opponent_card==QUEEN){
+		return 0;
+	}
+	if(m_opponent_card==KING){
+		return rand01() < gamma ? 1 : 0;
+	}
 }
 
 int KuhnPoker::getSecondNashAction() {
-    if(m_opponent_card==JACK){
-        return 0;
-    }
-    if(m_opponent_card==QUEEN){
-        return rand01() < beta ? 1 : 0;
-    }
-    if(m_opponent_card==KING){
-        return 1;
-    }
+	if(m_opponent_card==JACK){
+		return 0;
+	}
+	if(m_opponent_card==QUEEN){
+		return rand01() < beta ? 1 : 0;
+	}
+	if(m_opponent_card==KING){
+		return 1;
+	}
 }
 
 void KuhnPoker::dealCards() {
-    m_opponent_card = randRange(3); 		// Random number 0 = Jack, 1 = Queen, 2 = King 
+	m_opponent_card = randRange(3); 		// Random number 0 = Jack, 1 = Queen, 2 = King 
 	if (randRange(2) == 1){	// 50-50 chance of getting the either of the remaining cards
 		m_player_card =  (m_opponent_card + 1) % 3; 	
 	} else {
@@ -436,7 +436,7 @@ void Pacman::reset(){
 				pacman.y = cury;
 			}
 			else if (map[curx][cury] == GHOST){
-			    //Initialise ghost information
+				//Initialise ghost information
 				ghosts[ghostcount].pos.x = curx;
 				ghosts[ghostcount].pos.y = cury;
 				ghosts[ghostcount].pursue = 0;
@@ -518,7 +518,7 @@ percept_t Pacman::setObservation(){
 Pacman::direction_t Pacman::manhattanSearch(coord_t curcoord, direction_t camefrom, direction_t wentto, int dist, tile_t seeking){
 	//check if found it
 	if (testSquare(curcoord,seeking)){
-	    return wentto;
+		return wentto;
 	}
 	//check if max depth
 	if (dist == 0){
@@ -652,7 +652,7 @@ void Pacman::performAction(action_t action) {
 	if (!(validSquare(newsquare))){
 		m_signed_reward += WALLREWARD;
 	} else {
-	    //Perform the move
+		//Perform the move
 		m_signed_reward += MOVEREWARD;
 		map[pacman.x][pacman.y] = EMPTY;
 		pacman.x = newsquare.x;
@@ -667,7 +667,7 @@ void Pacman::performAction(action_t action) {
 				for (int i = 0; i < numghosts; i++){
 					if (ghosts[i].alive && ghosts[i].pos.x == pacman.x && ghosts[i].pos.y == pacman.y){
 						ghosts[i].alive = false;
-				        m_signed_reward += GHOSTEATREWARD;
+						m_signed_reward += GHOSTEATREWARD;
 					}
 				}
 			} else {
@@ -684,7 +684,7 @@ void Pacman::performAction(action_t action) {
 			foodleft--;
 			if (foodleft == 0){
 				//Eaten everything, gameover
-			    m_signed_reward += COMPLETE;
+				m_signed_reward += COMPLETE;
 				reset();
 				return;
 			}

@@ -76,8 +76,11 @@ public:
 
 	// get the agent's probability of receiving a particular percept
 	double perceptProbability(percept_t observation, percept_t reward) const; // TODO: implement in agent.cpp
-
-    int numSimulations(void) const;
+	
+	// print out the agent's context tree
+	std::string prettyPrintContextTree() const;
+	
+	int numSimulations(void) const;
 
 private:
 	// action sanity check
@@ -95,12 +98,12 @@ private:
 
 
 	// agent properties
-	unsigned int m_actions;      // number of actions
+	unsigned int m_actions;	  // number of actions
 	unsigned int m_actions_bits; // number of bits to represent an action
-	unsigned int m_obs_bits;     // number of bits to represent an observation
-	unsigned int m_rew_bits;     // number of bits to represent a reward
-	size_t m_horizon;            // length of the search horizon
-	int m_simulations;           // number of Monte Carlo simulations
+	unsigned int m_obs_bits;	 // number of bits to represent an observation
+	unsigned int m_rew_bits;	 // number of bits to represent a reward
+	size_t m_horizon;			// length of the search horizon
+	int m_simulations;		   // number of Monte Carlo simulations
 
 	// Context Tree representing the agent's beliefs
 	ContextTree *m_ct;
@@ -120,26 +123,26 @@ private:
 // to a copy of itself from a previous time cycle
 class ModelUndo {
 
-    public:
-        // construct a save point
-        ModelUndo(const Agent &agent);
+	public:
+		// construct a save point
+		ModelUndo(const Agent &agent);
 
-        // saved state age accessor
-        age_t age(void) const { return m_age; }
+		// saved state age accessor
+		age_t age(void) const { return m_age; }
 
-        // saved state reward accessor
-        reward_t reward(void) const { return m_reward; }
+		// saved state reward accessor
+		reward_t reward(void) const { return m_reward; }
 
-        // saved state history size accessor
-        size_t historySize(void) const { return m_history_size; }
+		// saved state history size accessor
+		size_t historySize(void) const { return m_history_size; }
 
-        bool lastUpdate(void) const { return m_last_update_percept; }
+		bool lastUpdate(void) const { return m_last_update_percept; }
 
-    private:
-        age_t m_age;
-        reward_t m_reward;
-        size_t m_history_size;
-        bool m_last_update_percept;
+	private:
+		age_t m_age;
+		reward_t m_reward;
+		size_t m_history_size;
+		bool m_last_update_percept;
 };
 
 
