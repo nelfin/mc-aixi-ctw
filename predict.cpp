@@ -38,11 +38,11 @@ size_t CTNode::size(void) const {
 // compute the logarithm of the KT-estimator update multiplier
 double CTNode::logKTMul(symbol_t sym) const {
 
-  // next-term pseudo-Laplace estimator, doesn't update m_count[]
-  int temp = m_count[sym] + 1;
-  int temp2 = m_count[1 - sym]; // other symbol
+	// next-term pseudo-Laplace estimator, doesn't update m_count[]
+	int temp = m_count[sym] + 1;
+	int temp2 = m_count[1 - sym]; // other symbol
 
-  return log((temp + 0.5) / (temp + temp2 + 1));
+	return log((temp + 0.5) / (temp + temp2 + 1));
 }
 
 
@@ -63,19 +63,28 @@ std::string CTNode::prettyPrintNode(int depth) {
 	std::string count0 = static_cast<std::ostringstream*>( &(std::ostringstream() << m_count[0]) )->str();
 	std::string count1 = static_cast<std::ostringstream*>( &(std::ostringstream() << m_count[1]) )->str();
 	std::ostringstream double_to_str_stream;
-	double_to_str_stream << std::setprecision(3) << m_log_prob_est;
-	std::string log_prob_weighted_string =double_to_str_stream.str();
+	double_to_str_stream << std::setprecision(3) << exp(m_log_prob_est);
+	std::string log_prob_string =double_to_str_stream.str();
 
-	answer.append(log_prob_weighted_string+": (" + count0 + "," + count1 + ")\n");
+	answer.append(log_prob_string+": (" + count0 + "," + count1 + ")\n");
 	if(m_child[0] != NULL)
-		answer.append(m_child[0]->prettyPrintNode(depth + 1));
+		answer.append("0   "+m_child[0]->prettyPrintNode(depth + 1));
 	if(m_child[1] != NULL)
-		answer.append(m_child[1]->prettyPrintNode(depth + 1));
+		answer.append("1   "+m_child[1]->prettyPrintNode(depth + 1));
 	return answer;
 }
 
 std::string ContextTree::prettyPrint(void) {
 	return m_root->prettyPrintNode(0);
+}
+
+std::string ContextTree::printHistory(void) {
+	std::string answer;
+	history_t::iterator history_iterator = m_history.begin();
+
+	while (history_iterator != m_history.end())
+		answer.append(" "+static_cast<std::ostringstream*>( &(std::ostringstream() <<(*history_iterator++)) )->str());
+	return answer;
 }
 
 ContextTree::~ContextTree(void) {
@@ -91,17 +100,16 @@ void ContextTree::clear(void) {
 }
 
 void CTNode::update(symbol_t sym, int depth, history_t history) {
-
   if (depth == 0 || history.empty()) {
-	// It's a LEAF!
-	this->m_log_prob_est = this->logKTMul(sym);
-	this->m_log_prob_weighted = this->m_log_prob_est;
-	this->m_count[sym]++;
-  } else {
-	// fill out the tree as we go along
-	if (NULL == child(0)) {
-		this->m_child[0] = new CTNode();
-		this->m_child[1] = new CTNode();
+		// It's a LEAF!
+		this->m_log_prob_est = this->logKTMul(sym);
+		this->m_log_prob_weighted = this->m_log_prob_est;
+		this->m_count[sym]++;
+	} else {
+		// fill out the tree as we go along
+		if (NULL == child(0)) {
+			this->m_child[0] = new CTNode();
+			this->m_child[1] = new CTNode();
 	}
 	symbol_t h = history.back();
 	history.pop_back();
@@ -130,16 +138,14 @@ void ContextTree::update(symbol_t sym) {
 
 
 void ContextTree::update(const symbol_list_t &symlist) {
-
-  for (size_t i=0; i < symlist.size(); i++) {
-	update(symlist[i]);
-  }
+	for (size_t i=0; i < symlist.size(); i++) {
+		update(symlist[i]);
+	}
 }
 
 
 // updates the history statistics, without touching the context tree
 void ContextTree::updateHistory(const symbol_list_t &symlist) {
-
 	for (size_t i=0; i < symlist.size(); i++) {
 		m_history.push_back(symlist[i]);
 	}
@@ -177,7 +183,6 @@ void ContextTree::revert(void) {
 
 // shrinks the history down to a former size
 void ContextTree::revertHistory(size_t newsize) {
-
 	assert(newsize <= m_history.size());
 	while (m_history.size() > newsize) m_history.pop_back();
 }
@@ -187,9 +192,7 @@ void ContextTree::revertHistory(size_t newsize) {
 // generate a specified number of random symbols
 // distributed according to the context tree statistics
 void ContextTree::genRandomSymbols(symbol_list_t &symbols, size_t bits) {
-
 	genRandomSymbolsAndUpdate(symbols, bits);
-
 	// restore the context tree to its original state   // its* ftfy
 	for (size_t i=0; i < bits; i++) revert();
 }

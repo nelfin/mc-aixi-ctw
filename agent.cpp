@@ -33,6 +33,11 @@ Agent::~Agent(void) {
 	if (m_ct) delete m_ct;
 }
 
+// print out the agent's history
+std::string Agent::printHistory(void) const {
+	return m_ct->printHistory();
+}
+
 // print out the agent's context tree
 std::string Agent::prettyPrintContextTree() const {
 	return m_ct->prettyPrint();
@@ -91,7 +96,7 @@ size_t Agent::horizon(void) const {
 
 // generate an action uniformly at random
 action_t Agent::genRandomAction(void) const {
-  return randRange(m_actions);
+	return randRange(m_actions);
 }
 
 // generate an action distributed according
@@ -106,15 +111,15 @@ action_t Agent::genAction(void) const {
 // generate a percept distributed according
 // to our history statistics
 void Agent::genPercept(percept_t *observation, percept_t *reward) {
-  symbol_list_t percept;
-  size_t totalBits = m_rew_bits + m_obs_bits;
-  
-  m_ct->genRandomSymbols(percept, totalBits);
-  *reward = decodeReward(percept);
-  for (unsigned int i = 0; i < m_rew_bits; i++) {
+	symbol_list_t percept;
+	size_t totalBits = m_rew_bits + m_obs_bits;
+	
+	m_ct->genRandomSymbols(percept, totalBits);
+	*reward = decodeReward(percept);
+	for (unsigned int i = 0; i < m_rew_bits; i++) {
 	percept.pop_back();
-  }
-  *observation = decodeObservation(percept);
+	}
+	*observation = decodeObservation(percept);
    
 }
 
@@ -122,19 +127,19 @@ void Agent::genPercept(percept_t *observation, percept_t *reward) {
 // generate a percept distributed to our history statistics, and
 // update our mixture environment model with it
 void Agent::genPerceptAndUpdate(percept_t *observation, percept_t *reward) {
-  symbol_list_t percept;
-  size_t totalBits = m_rew_bits + m_obs_bits;
-  
-  m_ct->genRandomSymbolsAndUpdate(percept, totalBits);
-  *reward = decodeReward(percept);
-  for (unsigned int i = 0; i < m_rew_bits; i++) {
-	percept.pop_back();
-  }
-  *observation = decodeObservation(percept);
+	symbol_list_t percept;
+	size_t totalBits = m_rew_bits + m_obs_bits;
 
-  // Update agent properties
-  m_total_reward += *reward;
-  m_last_update_percept = true;
+	m_ct->genRandomSymbolsAndUpdate(percept, totalBits);
+	*reward = decodeReward(percept);
+	for (unsigned int i = 0; i < m_rew_bits; i++) {
+	percept.pop_back();
+	}
+	*observation = decodeObservation(percept);
+
+	// Update agent properties
+	m_total_reward += *reward;
+	m_last_update_percept = true;
 }
 
 
@@ -174,17 +179,17 @@ void Agent::modelUpdate(action_t action) {
 // to that of a previous time cycle, false on failure
 bool Agent::modelRevert(const ModelUndo &mu) {
 
-  try {
+	try {
 	assert(mu.age() <= age());
 	assert(mu.historySize() <= historySize());
-  }
-  catch (char *str) {
+	}
+	catch (char *str) {
 	return false; // yay exception handling!!
-  }
-  m_time_cycle = mu.age();
-  m_total_reward = mu.reward();
-  m_ct->revertHistory(mu.historySize());
-  return true;
+	}
+	m_time_cycle = mu.age();
+	m_total_reward = mu.reward();
+	m_ct->revertHistory(mu.historySize());
+	return true;
 }
 
 

@@ -31,8 +31,8 @@ public:
 	// child corresponding to a particular symbol
 	const CTNode *child(symbol_t sym) const { return m_child[sym]; }
 
-  // best cheating function ever
-  void update(symbol_t sym, int depth, history_t history);
+	// best cheating function ever
+	void update(symbol_t sym, int depth, history_t history);
   
 	// number of descendants
 	size_t size(void) const;
@@ -120,6 +120,9 @@ public:
 	
 	// print one node of the context tree
 	std::string prettyPrintNode(int depth);
+	
+	// print the agent's history
+	std::string printHistory(void);
 
 
 private:

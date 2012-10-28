@@ -80,6 +80,9 @@ public:
 	// print out the agent's context tree
 	std::string prettyPrintContextTree() const;
 	
+	// print out the agent's history
+	std::string printHistory(void) const;
+	
 	int numSimulations(void) const;
 
 private:
@@ -92,18 +95,18 @@ private:
 	// encoding/decoding actions and percepts to/from symbol lists
 	void encodeAction(symbol_list_t &symlist, action_t action) const;
 	void encodePercept(symbol_list_t &symlist, percept_t observation, percept_t reward) const;
-  percept_t decodeObservation(const symbol_list_t &symlist) const;
+	percept_t decodeObservation(const symbol_list_t &symlist) const;
 	action_t decodeAction(const symbol_list_t &symlist) const;
 	percept_t decodeReward(const symbol_list_t &symlist) const;
 
 
 	// agent properties
-	unsigned int m_actions;	  // number of actions
-	unsigned int m_actions_bits; // number of bits to represent an action
-	unsigned int m_obs_bits;	 // number of bits to represent an observation
-	unsigned int m_rew_bits;	 // number of bits to represent a reward
+	unsigned int m_actions;		// number of actions
+	unsigned int m_actions_bits;// number of bits to represent an action
+	unsigned int m_obs_bits;	// number of bits to represent an observation
+	unsigned int m_rew_bits;	// number of bits to represent a reward
 	size_t m_horizon;			// length of the search horizon
-	int m_simulations;		   // number of Monte Carlo simulations
+	int m_simulations;			// number of Monte Carlo simulations
 
 	// Context Tree representing the agent's beliefs
 	ContextTree *m_ct;
