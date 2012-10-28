@@ -106,7 +106,6 @@ void CTNode::update(symbol_t sym, int depth, history_t history) {
 		this->m_log_prob_est += this->logKTMul(sym);
 		this->m_count[sym]++;
 		this->m_log_prob_weighted = this->m_log_prob_est;
-		std::cout << this->m_log_prob_est << std::endl;
 	} else {
 		// fill out the tree as we go along
 		if (NULL == child(0)) {
