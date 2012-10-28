@@ -12,7 +12,7 @@
 #include "search.hpp"
 #include "util.hpp"
 
-#define DEBUGMODE true
+#define DEBUGMODE false
 
 // Streams for logging
 std::ofstream logFile;		// A verbose human-readable log
