@@ -40,7 +40,7 @@ double CTNode::logKTMul(symbol_t sym) const {
 	// next-term pseudo-Laplace estimator, doesn't update m_count[]
 	int temp = m_count[sym];
 	int temp2 = m_count[1 - sym]; // other symbol
-	return log((temp + 0.5) / (temp + temp2 + 1));
+	return log(temp + 0.5) - log(temp + temp2 + 1); //=log((temp+0.5) / log(temp+temp2+1))
 }
 
 
@@ -106,29 +106,30 @@ void CTNode::update(symbol_t sym, int depth, history_t history) {
 		this->m_log_prob_est += this->logKTMul(sym);
 		this->m_count[sym]++;
 		this->m_log_prob_weighted = this->m_log_prob_est;
+		std::cout << this->m_log_prob_est << std::endl;
 	} else {
 		// fill out the tree as we go along
 		if (NULL == child(0)) {
 			this->m_child[0] = new CTNode();
 			this->m_child[1] = new CTNode();
-	}
-	symbol_t h = history.back();
-	history.pop_back();
-	this->m_child[h]->update(sym, depth-1, history);
-	// the reason this doesn't use child(h) is because
-	// apparently "child(h)" isn't const but it is but it isn't
-	// GAHAHAHHHAHAHAHAHAHA
-	this->m_log_prob_est += this->logKTMul(sym);
-	this->m_count[sym]++;
-	
-	//See Equation 12 of IEEE CTW paper
-	//Uses identity log(a+c) = log(a) + log(1+exp(log(c) - log(a))
-	double x = child(0)->logProbWeighted() + child(1)->logProbWeighted();
-	double y = log(0.5) + m_log_prob_est + log(1 + exp(x - m_log_prob_est));
-	double z = log(0.5) + x + log(1 + exp(m_log_prob_est - x));
-	this->m_log_prob_weighted =   exp(x - m_log_prob_est) < exp(m_log_prob_est - x) ? y : z;
-	
-	history.push_back(h);
+		}
+		symbol_t h = history.back();
+		history.pop_back();
+		this->m_child[h]->update(sym, depth-1, history);
+		// the reason this doesn't use child(h) is because
+		// apparently "child(h)" isn't const but it is but it isn't
+		// GAHAHAHHHAHAHAHAHAHA
+		this->m_log_prob_est += this->logKTMul(sym);
+		this->m_count[sym]++;
+		
+		//See Equation 12 of IEEE CTW paper
+		//Uses identity log(a+c) = log(a) + log(1+exp(log(c) - log(a))
+		double x = child(0)->logProbWeighted() + child(1)->logProbWeighted();
+		double y = log(0.5) + m_log_prob_est + log(1 + exp(x - m_log_prob_est));
+		double z = log(0.5) + x + log(1 + exp(m_log_prob_est - x));
+		this->m_log_prob_weighted =   exp(x - m_log_prob_est) < exp(m_log_prob_est - x) ? y : z;
+		
+		history.push_back(h);
 	}
 }
 

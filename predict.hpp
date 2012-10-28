@@ -44,7 +44,7 @@ private:
 	~CTNode(void);
 
 	// compute the logarithm of the KT-estimator update multiplier
-	double logKTMul(symbol_t sym) const; // TODO: implement in predict.cpp
+	double logKTMul(symbol_t sym) const;
 
 	// remove a single symbol from the context tree
 	void revert(symbol_t sym, int depth, history_t history);
