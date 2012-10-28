@@ -199,6 +199,7 @@ int main(int argc, char *argv[]) {
 	options["agent-horizon"] = "16";
 	options["exploration"] = "0";	 // do not explore
 	options["explore-decay"] = "1.0"; // exploration rate does not decay
+	options["mc-simulations"] = "32";
 
 	// Read configuration options
 	std::ifstream conf(argv[1]);
