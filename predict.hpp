@@ -37,7 +37,6 @@ public:
 	// number of descendants
 	size_t size(void) const;
 	
-	std::string prettyPrintNode(int depth);
 
 private:
 	CTNode(void);
@@ -56,7 +55,8 @@ private:
 	// one slot for each symbol
 	count_t m_count[2];  // a,b in CTW literature
 	CTNode *m_child[2];
-
+	
+	std::string prettyPrintNode(int depth);
 };
 
 class ContextTree {

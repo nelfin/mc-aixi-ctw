@@ -6,12 +6,12 @@
 #include <cassert>
 #include <cmath> // "log" is a BAD idea dude
 #include "util.hpp"
-
+#include <limits>
 
 
 CTNode::CTNode(void) :
-	m_log_prob_est(0.0),
-	m_log_prob_weighted(0.0)
+	m_log_prob_est(0),
+	m_log_prob_weighted(0)
 {
 	m_count[0] = 0;
 	m_count[1] = 0;
@@ -61,9 +61,9 @@ std::string CTNode::prettyPrintNode(int depth) {
 	std::string count0 = static_cast<std::ostringstream*>( &(std::ostringstream() << m_count[0]) )->str();
 	std::string count1 = static_cast<std::ostringstream*>( &(std::ostringstream() << m_count[1]) )->str();
 	std::ostringstream double_to_str_stream;
-	double_to_str_stream << std::setprecision(8) << m_log_prob_est;
+	double_to_str_stream << "e=" << std::setprecision(8) << m_log_prob_est;
 	double_to_str_stream << ", ";
-	double_to_str_stream << std::setprecision(8) << m_log_prob_weighted;
+	double_to_str_stream << "w=" << std::setprecision(8) << m_log_prob_weighted;
 	std::string log_prob_str = double_to_str_stream.str();
 	answer.append(log_prob_str+": (" +
 			count0 + "," + count1 + ")\n"); 
@@ -78,6 +78,7 @@ std::string ContextTree::prettyPrint(void) {
 	return m_root->prettyPrintNode(0);
 }
 
+// print's the agent's history in the format O R A R A O R ...
 std::string ContextTree::printHistory(void) {
 	std::string answer;
 	history_t::iterator history_iterator = m_history.begin();
@@ -119,17 +120,14 @@ void CTNode::update(symbol_t sym, int depth, history_t history) {
 	// GAHAHAHHHAHAHAHAHAHA
 	this->m_log_prob_est += this->logKTMul(sym);
 	this->m_count[sym]++;
+	
 	//See Equation 12 of IEEE CTW paper
 	//Uses identity log(a+c) = log(a) + log(1+exp(log(c) - log(a))
 	double x = child(0)->logProbWeighted() + child(1)->logProbWeighted();
 	double y = log(0.5) + m_log_prob_est + log(1 + exp(x - m_log_prob_est));
 	double z = log(0.5) + x + log(1 + exp(m_log_prob_est - x));
 	this->m_log_prob_weighted =   exp(x - m_log_prob_est) < exp(m_log_prob_est - x) ? y : z;
-	if(y-z != 0.0){
-		//std::cout << std::setprecision(128) << y << std::endl;
-		//std::cout << std::setprecision(128) << z << std::endl;
-	}
-	this->m_log_prob_weighted = z;
+	
 	history.push_back(h);
 	}
 }

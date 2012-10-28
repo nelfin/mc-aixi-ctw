@@ -1,8 +1,11 @@
 CPP := g++
-CFLAGS := -Wall -O2
+CFLAGS := -Wall -O2 -g
 
 .PHONY: all
-all: main;
+all: main ctw_test; 
 
-main: *.cpp
-	$(CPP) $(CFLAGS) -o $@ *.cpp
+main: agent.cpp environment.cpp main.cpp predict.cpp search.cpp util.cpp
+	$(CPP) $(CFLAGS) -o $@ agent.cpp environment.cpp main.cpp predict.cpp search.cpp util.cpp
+
+ctw_test: agent.cpp ctw_test.cpp predict.cpp search.cpp util.cpp
+	$(CPP) $(CFLAGS) -o $@ agent.cpp ctw_test.cpp predict.cpp search.cpp util.cpp

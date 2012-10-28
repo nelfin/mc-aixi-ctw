@@ -117,7 +117,7 @@ void Agent::genPercept(percept_t *observation, percept_t *reward) {
 	m_ct->genRandomSymbols(percept, totalBits);
 	*reward = decodeReward(percept);
 	for (unsigned int i = 0; i < m_rew_bits; i++) {
-	percept.pop_back();
+		percept.pop_back();
 	}
 	*observation = decodeObservation(percept);
    

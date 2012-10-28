@@ -20,7 +20,6 @@ std::ofstream compactLog;	// A compact comma-separated value log
 
 // The main agent/environment interaction loop
 void mainLoop(Agent &ai, Environment &env, options_t &options) {
-  
 	// Determine exploration options
 	bool explore = options.count("exploration") > 0;
 	double explore_rate, explore_decay;
@@ -112,7 +111,7 @@ void mainLoop(Agent &ai, Environment &env, options_t &options) {
 			std::cout << "cycle: " << cycle << std::endl;
 			std::cout << "average reward: " << ai.averageReward() << std::endl;
 			std::cout << "agent CTW tree: " << std::endl << ai.prettyPrintContextTree() << std::endl;
-			//std::cout << "agent history: " << ai.printHistory() << std::endl;
+			std::cout << "agent history: " << ai.printHistory() << std::endl;
 			if (explore) {
 				std::cout << "explore rate: " << explore_rate << std::endl;
 			}
