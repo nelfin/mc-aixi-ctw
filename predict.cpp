@@ -39,7 +39,7 @@ size_t CTNode::size(void) const {
 double CTNode::logKTMul(symbol_t sym) const {
 
   // next-term pseudo-Laplace estimator, doesn't update m_count[]
-  int temp = m_count[sym] + 1;
+  int temp = m_count[sym];
   int temp2 = m_count[1 - sym]; // other symbol
 
   return log((temp + 0.5) / (temp + temp2 + 1));
@@ -94,9 +94,9 @@ void CTNode::update(symbol_t sym, int depth, history_t history) {
 
   if (depth == 0 || history.empty()) {
 	// It's a LEAF!
+	this->m_count[sym]++;
 	this->m_log_prob_est = this->logKTMul(sym);
 	this->m_log_prob_weighted = this->m_log_prob_est;
-	this->m_count[sym]++;
   } else {
 	// fill out the tree as we go along
 	if (NULL == child(0)) {
@@ -109,6 +109,7 @@ void CTNode::update(symbol_t sym, int depth, history_t history) {
 	  // the reason this doesn't use child(h) is because
 	  // apparently "child(h)" isn't const but it is but it isn't
 	  // GAHAHAHHHAHAHAHAHAHA
+	this->m_count[sym]++;
 	this->m_log_prob_est = this->logKTMul(sym);
 	// this->m_log_prob_weighted = log(0.5) +
 	//   log(exp(this->m_log_prob_est) +
