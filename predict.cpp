@@ -64,10 +64,11 @@ std::string CTNode::prettyPrintNode(int depth) {
 	std::string count1 = static_cast<std::ostringstream*>( &(std::ostringstream() << m_count[1]) )->str();
 	std::ostringstream double_to_str_stream;
 	double_to_str_stream << std::setprecision(3) << m_log_prob_est;
-	std::string log_prob_weighted_string =double_to_str_stream.str();
-
-	answer.append(log_prob_weighted_string+": (" + count0 + "," + count1 + ")\n");
-	if(m_child[0] != NULL)
+	double_to_str_stream << ", ";
+	double_to_str_stream << std::setprecision(3) << m_log_prob_weighted;
+	std::string log_prob_str = double_to_str_stream.str();
+	answer.append(log_prob_str+": (" +
+			count0 + "," + count1 + ")\n"); if(m_child[0] != NULL)
 		answer.append(m_child[0]->prettyPrintNode(depth + 1));
 	if(m_child[1] != NULL)
 		answer.append(m_child[1]->prettyPrintNode(depth + 1));
@@ -92,10 +93,10 @@ void ContextTree::clear(void) {
 
 void CTNode::update(symbol_t sym, int depth, history_t history) {
 
-  if (depth == 0 || history.empty()) {
+  if (depth == 0) {
 	// It's a LEAF!
+	this->m_log_prob_est += this->logKTMul(sym);
 	this->m_count[sym]++;
-	this->m_log_prob_est = this->logKTMul(sym);
 	this->m_log_prob_weighted = this->m_log_prob_est;
   } else {
 	// fill out the tree as we go along
@@ -109,22 +110,25 @@ void CTNode::update(symbol_t sym, int depth, history_t history) {
 	  // the reason this doesn't use child(h) is because
 	  // apparently "child(h)" isn't const but it is but it isn't
 	  // GAHAHAHHHAHAHAHAHAHA
+	this->m_log_prob_est += this->logKTMul(sym);
 	this->m_count[sym]++;
-	this->m_log_prob_est = this->logKTMul(sym);
-	// this->m_log_prob_weighted = log(0.5) +
-	//   log(exp(this->m_log_prob_est) +
-	// 	  exp(child(0)->logProbWeighted() +
-	// 		  child(1)->logProbWeighted()));
-	this->m_log_prob_weighted = log(0.5) +
-	  log(0.5) + log(m_log_prob_est) +
-	  log(1 + exp(m_child[0]->m_log_prob_weighted
-		  + m_child[1]->m_log_prob_weighted - m_log_prob_est));
-	this->m_count[sym]++;
+	double x = child(0)->logProbWeighted() + child(1)->logProbWeighted();
+	double y = log(0.5) + m_log_prob_est + log(1 + exp(x - m_log_prob_est));
+	double z = log(0.5) + x + log(1 + exp(m_log_prob_est - x));
+	this->m_log_prob_weighted = z;
+	//this->m_log_prob_weighted = log(0.5) +
+	  //m_log_prob_est +
+	  //log(1 + exp(x - m_log_prob_est));
 	history.push_back(h);
   }
 }
 
 void ContextTree::update(symbol_t sym) {
+	// Add pre-history
+	if (m_history.size() < m_depth) {
+		m_history.push_back(sym);
+		return;
+	}
   m_root->update(sym, m_depth, m_history); // cheating ;)
   m_history.push_back(sym); // add the new symbol to the history, do we need to do this?
 }
@@ -149,9 +153,9 @@ void ContextTree::updateHistory(const symbol_list_t &symlist) {
 // internal routine to remove a single symbol from the context tree
 // TODO: testing
 void CTNode::revert(symbol_t sym, int depth, history_t history) {
-	if (depth == 0 || history.empty()) {
+	if (depth == 0) {
 		this->m_count[sym]--;
-		this->m_log_prob_est = this->logKTMul(sym);
+		this->m_log_prob_est -= this->logKTMul(sym);
 		this->m_log_prob_weighted = this->m_log_prob_est;
 	} else {
 		// no need to delete nodes just yet
@@ -159,11 +163,22 @@ void CTNode::revert(symbol_t sym, int depth, history_t history) {
 		history.pop_back();
 		this->m_child[h]->revert(sym, depth-1, history);
 		this->m_count[sym]--;
-		this->m_log_prob_est = this->logKTMul(sym);
-		this->m_log_prob_weighted = log(0.5) +
-			log(exp(this->m_log_prob_est) +
-					exp(child(0)->logProbWeighted() +
-						child(1)->logProbWeighted()));
+		this->m_log_prob_est -= this->logKTMul(sym);
+		// If there's nothing under us then we're a leaf again
+		if (!child(0)->visits() && !child(1)->visits()) {
+			this->m_log_prob_weighted = this->m_log_prob_est;
+		} else {
+			double x = child(0)->logProbWeighted() +
+				child(1)->logProbWeighted();
+			double y = log(0.5) + m_log_prob_est + log(1 + exp(x -
+						m_log_prob_est));
+			double z = log(0.5) + x + log(1 +
+						exp(m_log_prob_est - x));
+			this->m_log_prob_weighted = z;
+			//this->m_log_prob_weighted = log(0.5) +
+				//m_log_prob_est +
+				//log(1 + exp(x - m_log_prob_est));
+		}
 		history.push_back(h);
 	}
 }
@@ -172,7 +187,9 @@ void CTNode::revert(symbol_t sym, int depth, history_t history) {
 void ContextTree::revert(void) {
 	symbol_t sym = m_history.back();
 	m_history.pop_back();
-	m_root->revert(sym, m_depth, m_history);
+	if (m_history.size() >= m_depth) {
+		m_root->revert(sym, m_depth, m_history);
+	}
 }
 
 
@@ -205,11 +222,24 @@ symbol_t ContextTree::predictNext() {
 	// Pr(1 | h)
 	//  = \frac{Pr(h ^ 1)}{Pr(h)}
 	//  = e^{\log{Pr(h ^ 1)} - \log{Pr(h)}}
+	//printf("Before:\n");
+	//std::cout << this->prettyPrint() << std::endl;
 	double pr_h = logBlockProbability();
 	update(1);
 	double pr_h1 = logBlockProbability();
 	revert();
-	return rand01() < exp(pr_h - pr_h1);
+	// How much is acceptable error?
+	//printf("After:\n");
+	//std::cout << this->prettyPrint() << std::endl;
+	assert(fabs(logBlockProbability() - pr_h) < 0.0001);
+	if (pr_h1 > 0.0 || pr_h > 0.0) {
+		printf("numerical error: Pr(1 | h) = %lf\n", exp(pr_h1 - pr_h));
+		std::cout << this->prettyPrint() << std::endl;
+		std::terminate();
+	}
+	assert(pr_h1 <= 0.0);
+	assert(pr_h <= 0.0);
+	return rand01() < exp(pr_h1 - pr_h);
 }
 
 // generate a specified number of random symbols distributed according to
