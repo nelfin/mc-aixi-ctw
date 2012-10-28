@@ -5,6 +5,8 @@
 
 #include <map>
 #include <cmath>
+#include <cassert>
+
 
 typedef unsigned long long visits_t;
 
@@ -83,7 +85,7 @@ extern action_t search(Agent &agent) {
 		// sample generates?
 		root->sample(agent, agent.horizon());
 	}
-	action_t best_action;
+	action_t best_action = NULL;
 	double best_score = -1.0;
 	for (action_t a = 0; a < agent.numActions(); a++) {
 		const SearchNode *ha = root->child(a);
@@ -148,7 +150,7 @@ action_t SearchNode::selectAction(Agent &agent) const {
 	double unexplored_score = -1.0;
 	double explored_score = -1.0;
 	bool exists_unexplored_actions = false;
-	action_t best_action;
+	action_t best_action = NULL;
 
 	for (action_t a = 0; a < agent.numActions(); a++) {
 		// XXX: What is the complexity of this lookup? Is there a better way

@@ -63,8 +63,8 @@ void mainLoop(Agent &ai, Environment &env, options_t &options) {
 		if (DEBUGMODE){
 		 	//SPECIFY ACTIONS ON COMMAND LINE FOR TESTING
 		 	char userinput[50];
-		 	scanf("%s", userinput);
-			
+		 	
+			assert(scanf("%s", userinput)==1);
 		 	if (userinput[0] == 'w'){
 		 		action = 0;
 		 	} else if (userinput[0] == 'd'){
@@ -112,6 +112,7 @@ void mainLoop(Agent &ai, Environment &env, options_t &options) {
 			std::cout << "cycle: " << cycle << std::endl;
 			std::cout << "average reward: " << ai.averageReward() << std::endl;
 			std::cout << "agent CTW tree: " << std::endl << ai.prettyPrintContextTree() << std::endl;
+			//std::cout << "agent history: " << ai.printHistory() << std::endl;
 			if (explore) {
 				std::cout << "explore rate: " << explore_rate << std::endl;
 			}
@@ -211,7 +212,7 @@ int main(int argc, char *argv[]) {
 	conf.close();
 
 	// Set up the environment
-	Environment *env;
+	Environment *env = NULL;
 
 	// TODO: instantiate the environment based on the "environment-name"
 	// option. For any environment you do not implement you may delete the

@@ -235,6 +235,7 @@ KuhnPoker::KuhnPoker(options_t &options) {
 	
 	// Implement strategy for opponent (bet|pass given m_opponent_card)
 	m_opponent_action = getFirstNashAction();
+	assert(m_opponent_action >= 0);
 	std::cout << "Opponent chose action "<< m_opponent_action <<std::endl;
 	
 	// m_observation = (m_player_card, m_opponent_action);
@@ -244,26 +245,28 @@ KuhnPoker::KuhnPoker(options_t &options) {
 }
 
 int KuhnPoker::getFirstNashAction() {
-	if(m_opponent_card==JACK){
-		return rand01() < alpha ? 1 : 0;
-	}
-	if(m_opponent_card==QUEEN){
-		return 0;
-	}
-	if(m_opponent_card==KING){
-		return rand01() < gamma ? 1 : 0;
+	switch(m_opponent_card){
+		case JACK:
+			return rand01() < alpha ? 1 : 0;
+		case QUEEN:
+			return 0;
+		case KING:
+			return rand01() < gamma ? 1 : 0;
+		default:
+			return -1;
 	}
 }
 
 int KuhnPoker::getSecondNashAction() {
-	if(m_opponent_card==JACK){
-		return 0;
-	}
-	if(m_opponent_card==QUEEN){
-		return rand01() < beta ? 1 : 0;
-	}
-	if(m_opponent_card==KING){
-		return 1;
+	switch(m_opponent_card){
+		case JACK:
+			return 0;
+		case QUEEN:
+			return rand01() < beta ? 1 : 0;
+		case KING:
+			return 1;
+		default:
+			return -1;
 	}
 }
 
@@ -294,6 +297,7 @@ void KuhnPoker::performAction(action_t action) {
 			m_investment++;
 			// Opponent gets to bet
 			int opponent_second_action = getSecondNashAction();
+			assert(opponent_second_action >= 0);
 			std::cout << "Opponent's second action was "<< opponent_second_action <<std::endl;
 			if (opponent_second_action == 0) { // Opponent passes again
 				// Player wins - NO SHOWDOWN
@@ -331,6 +335,7 @@ void KuhnPoker::performAction(action_t action) {
 	
 	// Implement strategy for opponent (bet|pass given m_opponent_card)
 	m_opponent_action = getFirstNashAction(); // Randomly chooses to pass (0) or bet (1)
+	assert(m_opponent_action >= 0);
 	std::cout << "Opponent chose action "<< m_opponent_action <<std::endl;
 	// OBSERVE
 	// Player Card 		= m_player_card
@@ -627,6 +632,8 @@ bool Pacman::testSquare(coord_t coord, tile_t seeking){
 			return (map[coord.x][coord.y] == PILL || map[coord.x][coord.y] == PILLANDGHOST);
 		case(PACMAN):
 			return (map[coord.x][coord.y] == PACMAN);
+		default:
+			return (map[coord.x][coord.y] == seeking);
 	}
 }
 
