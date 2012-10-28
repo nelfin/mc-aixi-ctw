@@ -12,7 +12,7 @@
 #include "search.hpp"
 #include "util.hpp"
 
-#define DEBUGMODE false
+#define DEBUGMODE true
 
 // Streams for logging
 std::ofstream logFile;		// A verbose human-readable log
@@ -63,8 +63,8 @@ void mainLoop(Agent &ai, Environment &env, options_t &options) {
 		if (DEBUGMODE){
 		 	//SPECIFY ACTIONS ON COMMAND LINE FOR TESTING
 		 	char userinput[50];
-		 	scanf("%s", userinput);
-			
+		 	
+			assert(scanf("%s", userinput)==1);
 		 	if (userinput[0] == 'w'){
 		 		action = 0;
 		 	} else if (userinput[0] == 'd'){
@@ -212,7 +212,7 @@ int main(int argc, char *argv[]) {
 	conf.close();
 
 	// Set up the environment
-	Environment *env;
+	Environment *env = NULL;
 
 	// TODO: instantiate the environment based on the "environment-name"
 	// option. For any environment you do not implement you may delete the
