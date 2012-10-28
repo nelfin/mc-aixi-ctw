@@ -295,9 +295,11 @@ void KuhnPoker::performAction(action_t action) {
 		} else { // player bet (investment = 2)
 			m_pot++;
 			m_investment++;
+			
 			// Opponent gets to bet
 			int opponent_second_action = getSecondNashAction();
 			assert(opponent_second_action >= 0);
+			
 			std::cout << "Opponent's second action was "<< opponent_second_action <<std::endl;
 			if (opponent_second_action == 0) { // Opponent passes again
 				// Player wins - NO SHOWDOWN
@@ -333,9 +335,9 @@ void KuhnPoker::performAction(action_t action) {
 	
 	dealCards();
 	
-	// Implement strategy for opponent (bet|pass given m_opponent_card)
-	m_opponent_action = getFirstNashAction(); // Randomly chooses to pass (0) or bet (1)
+	m_opponent_action = getFirstNashAction();
 	assert(m_opponent_action >= 0);
+	
 	std::cout << "Opponent chose action "<< m_opponent_action <<std::endl;
 	// OBSERVE
 	// Player Card 		= m_player_card
