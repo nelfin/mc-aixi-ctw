@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
 	
 	//Action and observation are 0, 1 so ctw_tree would predict reward 0 if it "understood" the game
 	ctw->update(0);
-	ctw->update(1);
+	ctw->update(0);
 	std::cout << ctw->prettyPrint();
 	std::cout << "Sequence: " << ctw->printHistory() << std::endl;
 	std::cout << "Next: "<< ctw->predictNext() << std::endl;

@@ -195,7 +195,7 @@ int main(int argc, char *argv[]) {
 	options_t options;
 
 	// Default configuration values
-	options["ct-depth"] = "3";
+	options["ct-depth"] = "4";
 	options["agent-horizon"] = "16";
 	options["exploration"] = "0";	 // do not explore
 	options["explore-decay"] = "1.0"; // exploration rate does not decay
