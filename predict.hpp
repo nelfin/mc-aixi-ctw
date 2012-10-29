@@ -41,7 +41,12 @@ public:
 private:
 	CTNode(void);
 
+	CTNode(const CTNode &other);
+
 	~CTNode(void);
+
+	// clone a CTNode
+	//void cloneNode(CTNode &src, CTNode &dst);
 
 	// compute the logarithm of the KT-estimator update multiplier
 	double logKTMul(symbol_t sym) const;
@@ -64,6 +69,9 @@ public:
 
 	// create a context tree of specified maximum depth
 	ContextTree(size_t depth);
+	
+	// create a context tree from another context tree
+	ContextTree(const ContextTree &ct);
 
 	~ContextTree(void);
 
@@ -123,7 +131,7 @@ public:
 	
 	// print the agent's history
 	std::string printHistory(void);
-
+	
 
 private:
 	history_t m_history; // the agents history

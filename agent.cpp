@@ -27,6 +27,16 @@ Agent::Agent(options_t & options) {
 	reset();
 }
 
+Agent::Agent(const Agent &a) {
+	m_actions = a.m_actions;
+	m_horizon = a.m_horizon;
+	m_simulations = a.m_simulations;
+	m_obs_bits = a.m_obs_bits;
+	m_rew_bits = a.m_rew_bits;
+	m_actions_bits = a.m_actions_bits;
+	m_ct = new ContextTree(*a.m_ct);
+}
+
 
 // destruct the agent and the corresponding context tree
 Agent::~Agent(void) {
@@ -281,9 +291,13 @@ bool Agent::getLastUpdate(void) const {
 	return m_last_update_percept;
 }
 
+ModelUndo::~ModelUndo(void) {
+	delete m_revert_clone;
+}
+
 // used to revert an agent to a previous state
 ModelUndo::ModelUndo(const Agent &agent) {
-
+	m_revert_clone = new Agent(agent);
 	m_age		  = agent.age();
 	m_reward	   = agent.reward();
 	m_history_size = agent.historySize();
