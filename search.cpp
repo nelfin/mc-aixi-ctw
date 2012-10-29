@@ -155,6 +155,7 @@ action_t SearchNode::selectAction(Agent &agent) const {
 	action_t *best = new action_t[num_actions];
 	int unexploredactions = 0;
 	int bestactions = 0;
+	action_t best_action;
 
 	for (action_t a = 0; a < num_actions; a++) {
 		const SearchNode *ha = child(a);
@@ -176,11 +177,17 @@ action_t SearchNode::selectAction(Agent &agent) const {
 			double score = win_value + ucb_bound;
 			if (score > explored_score) {
 				explored_score = score;
+				bestactions = 0;
 				best[bestactions] = a;
+			} else if (score == explored_score) {
 				bestactions++;
+				best[bestactions] = a;
 			}
 		}
-		best_action = best[randRange(0, bestactions)];
+		if (bestactions > 0)
+			best_action = best[randRange(0, bestactions+1)];
+		else
+			best_action = best[0];
 	}
 
 	delete[] unexplored;
