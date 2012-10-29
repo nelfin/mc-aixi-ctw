@@ -27,7 +27,7 @@ Agent::Agent(options_t & options) {
 	reset();
 }
 
-Agent::Agent(Agent &a) {
+Agent::Agent(const Agent &a) {
 	m_actions = a.m_actions;
 	m_horizon = a.m_horizon;
 	m_simulations = a.m_simulations;
@@ -286,9 +286,13 @@ bool Agent::getLastUpdate(void) const {
 	return m_last_update_percept;
 }
 
+ModelUndo::~ModelUndo(void) {
+	delete m_revert_clone;
+}
+
 // used to revert an agent to a previous state
 ModelUndo::ModelUndo(const Agent &agent) {
-	m_revert_clone = Agent(agent);
+	m_revert_clone = new Agent(agent);
 	m_age		  = agent.age();
 	m_reward	   = agent.reward();
 	m_history_size = agent.historySize();

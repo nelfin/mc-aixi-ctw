@@ -19,6 +19,23 @@ CTNode::CTNode(void) :
 	m_child[1] = NULL;
 }
 
+CTNode::CTNode(const CTNode &other) :
+	m_log_prob_est(other.m_log_prob_est),
+	m_log_prob_weighted(other.m_log_prob_weighted)
+{
+	m_count[0] = other.m_count[0];
+	m_count[1] = other.m_count[1];
+	if (other.m_child[0]) {
+		m_child[0] = new CTNode(*other.m_child[0]);
+	} else {
+		m_child[0] = NULL;
+	}
+	if (other.m_child[1]) {
+		m_child[1] = new CTNode(*other.m_child[1]);
+	} else {
+		m_child[1] = NULL;
+	}
+}
 
 CTNode::~CTNode(void) {
 	if (m_child[0]) delete m_child[0];
@@ -50,32 +67,11 @@ ContextTree::ContextTree(size_t depth) :
 	m_depth(depth)
 { return; }
 
-void cloneNode(CTNode &src, CTNode &dst){
-	src.m_count[0] = dst.m_count[0];
-	src.m_count[1] = dst.m_count[1];
-	src.m_log_prob_est = dst.m_log_prob_est;
-	src.m_log_prob_weighted = dst.m_log_prob_weighted;
-	
-	//Add space for new children in destination
-	if(dst.child[0] == NULL){
-		dst.child[0] = new CTNode();
-	}
-	if(dst.child[1] == NULL){
-		dst.child[1] = new CTNode();
-	}
-	
-	//Only copy if there is something to copy
-	if(src.child[0] != NULL){
-		cloneNode(src.child[0],dst.child[0]);
-	}
-	if(src.child[1] != NULL){
-		cloneNode(src.child[1],dst.child[1]);
-	}
-}
-
-ContextTree::ContextTree(ContextTree ct){
-	m_root = new CTNode();
-	cloneNode(m_root,ct.m_root);
+ContextTree::ContextTree(const ContextTree &ct){
+	m_depth = ct.m_depth;
+	// vector should copy automatically, as it is of simple types
+	m_history = ct.m_history;
+	m_root = new CTNode(*ct.m_root);
 }
 
 

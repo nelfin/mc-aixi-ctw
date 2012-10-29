@@ -136,7 +136,9 @@ class ModelUndo {
 	public:
 		// construct a save point
 		ModelUndo(const Agent &agent);
-		
+
+		~ModelUndo(void);
+
 		// saved state age accessor
 		age_t age(void) const { return m_age; }
 
@@ -152,7 +154,7 @@ class ModelUndo {
 		age_t m_age;
 		reward_t m_reward;
 		size_t m_history_size;
-		Agent m_revert_clone;
+		Agent *m_revert_clone;
 		bool m_last_update_percept;
 };
 
