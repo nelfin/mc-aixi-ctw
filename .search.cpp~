@@ -92,6 +92,7 @@ extern action_t search(Agent &agent) {
 		// sample generates?
 		std::cout << "before:" << std::endl;
 		std::cout << agent.prettyPrintContextTree();
+		srand(1);
 		root->sample(agent, agent.horizon());
 		// Restore from savepoint
 		std::cout << "after:" << std::endl;

@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
 		ai.modelUpdate(guess);
 		ai.modelUpdate(coin,coin==guess);
 	}
-	std::cout << "before:" << std::endl;
+	std::cout << "before:" << std:endl;
 	std::cout << ai.prettyPrintContextTree();
 	ModelUndo mu = ModelUndo(ai);
 	for (int i = 0; i < 5; i++) {
