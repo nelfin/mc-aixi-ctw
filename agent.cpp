@@ -186,8 +186,7 @@ bool Agent::modelRevert(const ModelUndo &mu) {
 	catch (char *str) {
 	return false; // yay exception handling!!
 	}
-	m_time_cycle = mu.age();
-	m_total_reward = mu.reward();
+
 	// Wacky...
 	for (size_t i = historySize(); i > mu.historySize(); ) {
 		if (m_last_update_percept) {
@@ -203,6 +202,9 @@ bool Agent::modelRevert(const ModelUndo &mu) {
 		}
 		m_last_update_percept = !m_last_update_percept;
 	}
+	m_time_cycle = mu.age();
+	m_total_reward = mu.reward();
+	m_last_update_percept = mu.lastUpdate();
 	return true;
 }
 
@@ -270,6 +272,9 @@ percept_t Agent::decodeReward(const symbol_list_t &symlist) const {
 	return decode(symlist, m_rew_bits);
 }
 
+bool Agent::getLastUpdate(void) const {
+	return m_last_update_percept;
+}
 
 // used to revert an agent to a previous state
 ModelUndo::ModelUndo(const Agent &agent) {
@@ -277,5 +282,5 @@ ModelUndo::ModelUndo(const Agent &agent) {
 	m_age		  = agent.age();
 	m_reward	   = agent.reward();
 	m_history_size = agent.historySize();
-
+	m_last_update_percept = agent.getLastUpdate();
 }

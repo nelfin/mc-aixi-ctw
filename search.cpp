@@ -76,19 +76,33 @@ static reward_t playout(Agent &agent, unsigned int playout_len) {
 
 // determine the best action by searching ahead using MCTS
 extern action_t search(Agent &agent) {
-	SearchNode *root = new SearchNode(false);
-	const int simulations = agent.numSimulations();
+
 	// Savepoint
-	ModelUndo mu = ModelUndo(agent); 
+	ModelUndo mu = ModelUndo(agent);
+
+	// Create new tree (start at root)
+	SearchNode *root = new SearchNode(false);
+
+	// Simulate different possible futures
+	const int simulations = 2;//agent.numSimulations();
+	std::cout << "---" << std::endl;
+	//std::cout << agent.prettyPrintContextTree();
 	for (int i = 0; i < simulations; i++) {
 		// should we be throwing away the accumulated reward of the run that
 		// sample generates?
+		std::cout << "sim." << std::endl;
+		std::cout << agent.prettyPrintContextTree();
 		root->sample(agent, agent.horizon());
 		// Restore from savepoint
-		agent.modelRevert(mu);
+		assert(agent.modelRevert(mu));
 	}
+	std::cout << agent.prettyPrintContextTree();
+	std::cout << "---" << std::endl;
+
+	// Determine best action
 	action_t best_action = NULL;
 	double best_score = -1.0;
+
 	for (action_t a = 0; a < agent.numActions(); a++) {
 		const SearchNode *ha = root->child(a);
 		if (NULL == ha) {
@@ -96,12 +110,13 @@ extern action_t search(Agent &agent) {
 			// Should this be an assert?
 			continue;
 		}
-		double score = ha->expectation();
+		double score = ha->expectation() + rand01() * 0.0001;
 		if (score > best_score) {
 			best_score = score;
 			best_action = a;
 		}
 	}
+
 	// Hopefully we're not leaking too much memory.
 	delete root;
 	if (best_score < 0.0) {

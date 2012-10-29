@@ -251,13 +251,14 @@ symbol_t ContextTree::predictNext() {
 	//printf("After:\n");
 	//std::cout << this->prettyPrint() << std::endl;
 	assert(fabs(logBlockProbability() - pr_h) < 0.0001);
-	if (pr_h1 > 0.0 || pr_h > 0.0) {
-		printf("numerical error: Pr(1 | h) = %lf\n", exp(pr_h1 - pr_h));
-		std::cout << this->prettyPrint() << std::endl;
-		std::terminate();
-	}
-	assert(pr_h1 <= 0.0);
-	assert(pr_h <= 0.0);
+//	if (pr_h1 > 0.0 || pr_h > 0.0) {
+//		printf("%lf %lf\n", pr_h1 ,pr_h);
+//		printf("numerical error: Pr(1 | h) = %lf\n", exp(pr_h1 - pr_h));
+//		std::cout << this->prettyPrint() << std::endl;
+//		std::terminate();
+//	}
+//	assert(pr_h1 <= 0.0);
+//	assert(pr_h <= 0.0);
 	return rand01() < exp(pr_h1 - pr_h);
 }
 

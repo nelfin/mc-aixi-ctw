@@ -85,6 +85,8 @@ public:
 	
 	int numSimulations(void) const;
 
+	bool getLastUpdate(void) const;
+
 private:
 	// action sanity check
 	bool isActionOk(action_t action) const;
