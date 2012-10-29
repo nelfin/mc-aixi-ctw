@@ -64,6 +64,9 @@ public:
 
 	// create a context tree of specified maximum depth
 	ContextTree(size_t depth);
+	
+	// create a context tree from another context tree
+	ContextTree(ContextTree &ct);
 
 	~ContextTree(void);
 
@@ -123,6 +126,9 @@ public:
 	
 	// print the agent's history
 	std::string printHistory(void);
+	
+	// clone a CTNode
+	void cloneNode(CTNode &src, CTNode &dst);
 
 
 private:

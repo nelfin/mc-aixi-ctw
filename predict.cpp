@@ -50,6 +50,34 @@ ContextTree::ContextTree(size_t depth) :
 	m_depth(depth)
 { return; }
 
+void cloneNode(CTNode &src, CTNode &dst){
+	src.m_count[0] = dst.m_count[0];
+	src.m_count[1] = dst.m_count[1];
+	src.m_log_prob_est = dst.m_log_prob_est;
+	src.m_log_prob_weighted = dst.m_log_prob_weighted;
+	
+	//Add space for new children in destination
+	if(dst.child[0] == NULL){
+		dst.child[0] = new CTNode();
+	}
+	if(dst.child[1] == NULL){
+		dst.child[1] = new CTNode();
+	}
+	
+	//Only copy if there is something to copy
+	if(src.child[0] != NULL){
+		cloneNode(src.child[0],dst.child[0]);
+	}
+	if(src.child[1] != NULL){
+		cloneNode(src.child[1],dst.child[1]);
+	}
+}
+
+ContextTree::ContextTree(ContextTree ct){
+	m_root = new CTNode();
+	cloneNode(m_root,ct.m_root);
+}
+
 
 // Let's print some REALLY REALLY PRETTY STRINGS, shall we?
 std::string CTNode::prettyPrintNode(int depth) {
@@ -204,6 +232,8 @@ void CTNode::revert(symbol_t sym, int depth, history_t history) {
 		history.push_back(h);
 	}
 }
+
+
 
 // removes the most recently observed symbol from the context tree
 void ContextTree::revert(void) {

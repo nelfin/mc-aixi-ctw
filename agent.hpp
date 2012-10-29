@@ -15,7 +15,10 @@ public:
 
 	// construct a learning agent from the command line arguments
 	Agent(options_t & options);
-
+	
+	// construct an agent from another agent
+	Agent(const Agent &a);
+	
 	// destruct the agent and the corresponding context tree
 	~Agent(void);
 
@@ -107,6 +110,8 @@ private:
 	unsigned int m_actions_bits;// number of bits to represent an action
 	unsigned int m_obs_bits;	// number of bits to represent an observation
 	unsigned int m_rew_bits;	// number of bits to represent a reward
+	
+	
 	size_t m_horizon;			// length of the search horizon
 	int m_simulations;			// number of Monte Carlo simulations
 
@@ -131,7 +136,7 @@ class ModelUndo {
 	public:
 		// construct a save point
 		ModelUndo(const Agent &agent);
-
+		
 		// saved state age accessor
 		age_t age(void) const { return m_age; }
 
@@ -147,6 +152,7 @@ class ModelUndo {
 		age_t m_age;
 		reward_t m_reward;
 		size_t m_history_size;
+		Agent m_revert_clone;
 		bool m_last_update_percept;
 };
 
