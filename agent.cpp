@@ -94,6 +94,7 @@ size_t Agent::horizon(void) const {
 }
 
 
+
 // generate an action uniformly at random
 action_t Agent::genRandomAction(void) const {
 	return randRange(m_actions);
@@ -178,7 +179,6 @@ void Agent::modelUpdate(action_t action) {
 // revert the agent's internal model of the world
 // to that of a previous time cycle, false on failure
 bool Agent::modelRevert(const ModelUndo &mu) {
-
 	try {
 	assert(mu.age() <= age());
 	assert(mu.historySize() <= historySize());
@@ -188,7 +188,21 @@ bool Agent::modelRevert(const ModelUndo &mu) {
 	}
 	m_time_cycle = mu.age();
 	m_total_reward = mu.reward();
-	m_ct->revertHistory(mu.historySize());
+	// Wacky...
+	for (size_t i = historySize(); i > mu.historySize(); ) {
+		if (m_last_update_percept) {
+			// revert an observation and reward
+			for (size_t j = 0; j < (m_obs_bits + m_rew_bits); j++) {
+				m_ct->revert();
+			}
+			i -= (m_obs_bits + m_rew_bits);
+		} else {
+			// revert an action
+			m_ct->revertHistory(i - m_actions_bits);
+			i -= m_actions_bits;
+		}
+		m_last_update_percept = !m_last_update_percept;
+	}
 	return true;
 }
 
