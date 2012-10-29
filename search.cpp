@@ -149,32 +149,38 @@ action_t SearchNode::selectAction(Agent &agent) const {
 	const double norm_factor = double(agent.horizon() * agent.maxReward());
 	double unexplored_score = -1.0;
 	double explored_score = -1.0;
-	bool exists_unexplored_actions = false;
 	action_t best_action = NULL;
+	int num_actions = agent.numActions();
+	action_t *unexplored = new action_t[num_actions];
+	action_t *best = new action_t[num_actions];
+	int unexploredactions = 0;
+	int bestactions = 0;
 
-	for (action_t a = 0; a < agent.numActions(); a++) {
-		// XXX: What is the complexity of this lookup? Is there a better way
-		// of doing this?
+	for (action_t a = 0; a < num_actions; a++) {
 		const SearchNode *ha = child(a);
 		if (NULL == ha || ha->visits() == 0) {
 			// unexplored
-			exists_unexplored_actions = true;
-			double score = rand01();
-			if (score > unexplored_score) {
-				unexplored_score = score;
-				best_action = a;
-			}
-		} else if (!exists_unexplored_actions) {
-			// Don't bother if we've found an unexplored action, they always
-			// take precedence
+			unexplored[unexploredactions] = a;
+			unexploredactions++;
+		} 
+	}
+	
+	if (unexploredactions == 0){
+		best_action = unexplored[randRange(0, unexploredactions)];	
+	}
+	else { // All actions have been explored
+		for (action_t a = 0; a < num_actions; a++) {
+			const SearchNode *ha = child(a);
 			double win_value = ha->expectation() / norm_factor;
 			double ucb_bound = C * sqrt(log(visits()) / ha->visits());
 			double score = win_value + ucb_bound;
 			if (score > explored_score) {
 				explored_score = score;
-				best_action = a;
+				best[bestactions] = a;
+				bestactions++;
 			}
 		}
+		best_action = best[randRange(0, bestactions)];
 	}
 	return best_action;
 }
