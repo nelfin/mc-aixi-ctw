@@ -187,6 +187,7 @@ bool Agent::modelRevert(const ModelUndo &mu) {
 	return false; // yay exception handling!!
 	}
 
+	std::cout << "modelRevert" << std::endl;
 	// Wacky...
 	for (size_t i = historySize(); i > mu.historySize(); ) {
 		if (m_last_update_percept) {
@@ -195,13 +196,17 @@ bool Agent::modelRevert(const ModelUndo &mu) {
 				m_ct->revert();
 			}
 			i -= (m_obs_bits + m_rew_bits);
+			std::cout << "percept" << std::endl;
 		} else {
 			// revert an action
 			m_ct->revertHistory(i - m_actions_bits);
 			i -= m_actions_bits;
+			std::cout << "action" << std::endl;
 		}
 		m_last_update_percept = !m_last_update_percept;
+		std::cout << prettyPrintContextTree();
 	}
+	std::cout << "modelRevert ended" << std::endl;
 	m_time_cycle = mu.age();
 	m_total_reward = mu.reward();
 	m_last_update_percept = mu.lastUpdate();

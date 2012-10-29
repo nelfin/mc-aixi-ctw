@@ -90,12 +90,16 @@ extern action_t search(Agent &agent) {
 	for (int i = 0; i < simulations; i++) {
 		// should we be throwing away the accumulated reward of the run that
 		// sample generates?
-		std::cout << "sim." << std::endl;
+		std::cout << "before:" << std::endl;
 		std::cout << agent.prettyPrintContextTree();
+		srand(1);
 		root->sample(agent, agent.horizon());
 		// Restore from savepoint
+		std::cout << "after:" << std::endl;
+		std::cout << agent.prettyPrintContextTree();
 		assert(agent.modelRevert(mu));
 	}
+	std::cout << "reverted:" << std::endl;
 	std::cout << agent.prettyPrintContextTree();
 	std::cout << "---" << std::endl;
 
@@ -172,6 +176,8 @@ action_t SearchNode::selectAction(Agent &agent) const {
 	action_t *best = new action_t[num_actions];
 	int unexploredactions = 0;
 	int bestactions = 0;
+	
+	return 0;
 
 	for (action_t a = 0; a < num_actions; a++) {
 		const SearchNode *ha = child(a);
