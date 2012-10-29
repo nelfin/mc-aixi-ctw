@@ -124,10 +124,16 @@ void CTNode::update(symbol_t sym, int depth, history_t history) {
 		//See Equation 12 of IEEE CTW paper
 		//Uses identity log(a+c) = log(a) + log(1+exp(log(c) - log(a))
 		double x = child(0)->logProbWeighted() + child(1)->logProbWeighted();
-		double y = log(0.5) + m_log_prob_est + log(1 + exp(x - m_log_prob_est));
-		double z = log(0.5) + x + log(1 + exp(m_log_prob_est - x));
-		this->m_log_prob_weighted =   exp(x - m_log_prob_est) < exp(m_log_prob_est - x) ? y : z;
-		
+		double exponent = x - m_log_prob_est;
+		double y;
+		if (fabs(exponent) < 42.0) {
+			y = log(0.5) + m_log_prob_est + log(1 + exp(exponent));
+		} else {
+			y = log(0.5) + m_log_prob_est + exponent;
+		}
+//		double z = log(0.5) + x + log(1 + exp(m_log_prob_est - x));
+//		this->m_log_prob_weighted =   exp(x - m_log_prob_est) < exp(m_log_prob_est - x) ? y : z;
+		this->m_log_prob_weighted = y;
 		history.push_back(h);
 	}
 }
@@ -175,13 +181,22 @@ void CTNode::revert(symbol_t sym, int depth, history_t history) {
 		if (!child(0)->visits() && !child(1)->visits()) {
 			this->m_log_prob_weighted = this->m_log_prob_est;
 		} else {
-			double x = child(0)->logProbWeighted() +
-				child(1)->logProbWeighted();
-			double y = log(0.5) + m_log_prob_est + log(1 + exp(x -
-						m_log_prob_est));
-			double z = log(0.5) + x + log(1 +
-						exp(m_log_prob_est - x));
-			this->m_log_prob_weighted = z;
+			double x = child(0)->logProbWeighted() + child(1)->logProbWeighted();
+			double exponent = x - m_log_prob_est;
+			double y;
+			if (fabs(exponent) < 42.0) {
+				y = log(0.5) + m_log_prob_est + log(1 + exp(exponent));
+			} else {
+				y = log(0.5) + m_log_prob_est + exponent;
+			}
+			this->m_log_prob_weighted = y;
+//			double x = child(0)->logProbWeighted() +
+//				child(1)->logProbWeighted();
+//			double y = log(0.5) + m_log_prob_est + log(1 + exp(x -
+//						m_log_prob_est));
+//			double z = log(0.5) + x + log(1 +
+//						exp(m_log_prob_est - x));
+//			this->m_log_prob_weighted = z;
 			//this->m_log_prob_weighted = log(0.5) +
 				//m_log_prob_est +
 				//log(1 + exp(x - m_log_prob_est));
