@@ -182,6 +182,10 @@ action_t SearchNode::selectAction(Agent &agent) const {
 		}
 		best_action = best[randRange(0, bestactions)];
 	}
+
+	delete[] unexplored;
+	delete[] best;
+
 	return best_action;
 }
 
