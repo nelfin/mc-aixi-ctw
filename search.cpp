@@ -61,8 +61,7 @@ private:
 
 // simulate a path through a hypothetical future for the agent within it's
 // internal model of the world, returning the accumulated reward.
-static reward_t playout(Agent &agent, unsigned int playout_len) {
-	ModelUndo *mu = new ModelUndo(agent); 
+static reward_t playout(Agent &agent, unsigned int playout_len) { 
 	reward_t reward = 0.0;
 	action_t a;
 	percept_t ob, r;
@@ -72,7 +71,6 @@ static reward_t playout(Agent &agent, unsigned int playout_len) {
 		agent.genPerceptAndUpdate(&ob, &r);
 		reward += reward_t(r);
 	}
-	agent.modelRevert(*mu);
 	return reward;
 }
 
@@ -80,10 +78,14 @@ static reward_t playout(Agent &agent, unsigned int playout_len) {
 extern action_t search(Agent &agent) {
 	SearchNode *root = new SearchNode(false);
 	const int simulations = agent.numSimulations();
+	// Savepoint
+	ModelUndo mu = ModelUndo(agent); 
 	for (int i = 0; i < simulations; i++) {
 		// should we be throwing away the accumulated reward of the run that
 		// sample generates?
 		root->sample(agent, agent.horizon());
+		// Restore from savepoint
+		agent.modelRevert(mu);
 	}
 	action_t best_action = NULL;
 	double best_score = -1.0;
@@ -197,10 +199,7 @@ action_t SearchNode::selectAction(Agent &agent) const {
 
 // perform a sample run through this node and it's children,
 // returning the accumulated reward from this sample run
-reward_t SearchNode::sample(Agent &agent, unsigned int dfr) {
-  
-	// Savepoint
-	ModelUndo *mu = new ModelUndo(agent);  
+reward_t SearchNode::sample(Agent &agent, unsigned int dfr) { 
   
 	// req: a search tree \Psi (in agent)
 	// req: a history h (also in agent)
@@ -233,9 +232,6 @@ reward_t SearchNode::sample(Agent &agent, unsigned int dfr) {
 	// Back propagation:
 	m_mean = (reward + double(m_visits)*m_mean) / (double(m_visits) + 1.0);
 	m_visits++;
-
-	// Restore from savepoint
-	agent.modelRevert(*mu);
 
 	// Return reward
 	return reward;
