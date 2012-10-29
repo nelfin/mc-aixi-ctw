@@ -165,7 +165,7 @@ action_t SearchNode::selectAction(Agent &agent) const {
 		} 
 	}
 	
-	if (unexploredactions == 0){
+	if (unexploredactions != 0){
 		best_action = unexplored[randRange(0, unexploredactions)];	
 	}
 	else { // All actions have been explored
