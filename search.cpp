@@ -155,7 +155,6 @@ action_t SearchNode::selectAction(Agent &agent) const {
 	action_t *best = new action_t[num_actions];
 	int unexploredactions = 0;
 	int bestactions = 0;
-	action_t best_action;
 
 	for (action_t a = 0; a < num_actions; a++) {
 		const SearchNode *ha = child(a);
@@ -199,7 +198,9 @@ action_t SearchNode::selectAction(Agent &agent) const {
 // perform a sample run through this node and it's children,
 // returning the accumulated reward from this sample run
 reward_t SearchNode::sample(Agent &agent, unsigned int dfr) {
-  ModelUndo *mu = new ModelUndo(agent);  
+  
+	// Savepoint
+	ModelUndo *mu = new ModelUndo(agent);  
   
 	// req: a search tree \Psi (in agent)
 	// req: a history h (also in agent)
@@ -207,8 +208,9 @@ reward_t SearchNode::sample(Agent &agent, unsigned int dfr) {
 	reward_t reward;
 	if (dfr == 0) {
 		return reward_t(0.0);
-	} else if (m_chance_node) {
+	} else if (m_chance_node) { // Is this set properly?
 		// chance node business
+		// Generates (o,r) from the ctw given h
 		percept_t ob, r;
 		agent.genPerceptAndUpdate(&ob, &r);
 		// Create node \Psi(hor) if T(hor) = 0, i.e. it doesn't exist
@@ -227,9 +229,14 @@ reward_t SearchNode::sample(Agent &agent, unsigned int dfr) {
 		}
 		reward = m_child[a].sample(agent, dfr);
 	}
-	m_mean = (reward + double(m_visits)*m_mean) /
-		(double(m_visits) + 1.0);
+
+	// Back propagation:
+	m_mean = (reward + double(m_visits)*m_mean) / (double(m_visits) + 1.0);
 	m_visits++;
+
+	// Restore from savepoint
 	agent.modelRevert(*mu);
+
+	// Return reward
 	return reward;
 }
