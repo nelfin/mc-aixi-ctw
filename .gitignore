@@ -12,6 +12,12 @@
 *.a
 
 # Program output
-log
-log.csv
+*log
+*log.csv
 main
+ctw_test
+search_test
+maininprog
+
+#kate files
+.*~

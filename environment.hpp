@@ -163,8 +163,7 @@ private:
 	int getSecondNashAction();
 	
 	// Following are temporary variables used only within the scope of 
-	// performAction and they do need to persist over different
-	// calls to the function - Do they need to be class variables?
+	// performAction
 	unsigned int m_pot;
 	unsigned int m_investment;
 	bool m_win_flag;
@@ -208,6 +207,8 @@ private:
 	void reset();
 	
 	percept_t setObservation();
+	
+	// Pacman private state variables and methods
 	bool lineOfSight(coord_t curcoord, direction_t direction, tile_t seeking);
 	direction_t manhattanSearch
 		(coord_t curcoord, direction_t camefrom, direction_t wentto, int dist, tile_t seeking);

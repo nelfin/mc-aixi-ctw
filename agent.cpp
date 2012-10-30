@@ -189,16 +189,18 @@ void Agent::modelUpdate(action_t action) {
 // revert the agent's internal model of the world
 // to that of a previous time cycle, false on failure
 bool Agent::modelRevert(const ModelUndo &mu) {
+	
+	// correct asserts
 	try {
 	assert(mu.age() <= age());
 	assert(mu.historySize() <= historySize());
 	}
 	catch (char *str) {
-	return false; // yay exception handling!!
+	return false;
 	}
 
-	//std::cout << "modelRevert" << std::endl;
-	// Wacky...
+	// remove all new items from the historySize
+	// revert the CTW at each step
 	for (size_t i = historySize(); i > mu.historySize(); ) {
 		if (m_last_update_percept) {
 			// revert an observation and reward
@@ -206,17 +208,14 @@ bool Agent::modelRevert(const ModelUndo &mu) {
 				m_ct->revert();
 			}
 			i -= (m_obs_bits + m_rew_bits);
-			//std::cout << "percept" << std::endl;
 		} else {
 			// revert an action
 			m_ct->revertHistory(i - m_actions_bits);
 			i -= m_actions_bits;
-			//std::cout << "action" << std::endl;
 		}
 		m_last_update_percept = !m_last_update_percept;
-		//std::cout << prettyPrintContextTree();
 	}
-	//std::cout << "modelRevert ended" << std::endl;
+	// revert other states
 	m_time_cycle = mu.age();
 	m_total_reward = mu.reward();
 	m_last_update_percept = mu.lastUpdate();
@@ -296,6 +295,7 @@ ModelUndo::~ModelUndo(void) {
 }
 
 // used to revert an agent to a previous state
+// defunct deep copy code used for testing
 ModelUndo::ModelUndo(const Agent &agent) {
 	m_revert_clone = new Agent(agent);
 	m_age		  = agent.age();

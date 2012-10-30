@@ -51,10 +51,7 @@ private:
 	double m_mean;	  // the expected reward of this node
 	visits_t m_visits;  // number of times the search node has been visited
 
-	// NOTE: action_t and percept_t are both typedef unsigned int, but how do
-	// we tell action_t(0) apart from percept_t(0)? Dammit.  I guess chance
-	// nodes should always be preceded by an action and vice versa, but
-	// goddamit this isn't type-safe. What's the point!?
+	// NOTE: action_t and percept_t are both typedef unsigned int
 	typedef std::map<unsigned int, SearchNode> m_child_t;
 	m_child_t m_child;
 };
@@ -85,22 +82,11 @@ extern action_t search(Agent &agent) {
 
 	// Simulate different possible futures
 	const int simulations = agent.numSimulations();
-	//std::cout << "---" << std::endl;
-	//std::cout << agent.prettyPrintContextTree();
 	for (int i = 0; i < simulations; i++) {
-		// should we be throwing away the accumulated reward of the run that
-		// sample generates?
-		//std::cout << "before:" << std::endl;
-		//std::cout << agent.prettyPrintContextTree();
 		root->sample(agent, agent.horizon());
 		// Restore from savepoint
-		//std::cout << "after:" << std::endl;
-		//std::cout << agent.prettyPrintContextTree();
 		assert(agent.modelRevert(mu));
 	}
-	//std::cout << "reverted:" << std::endl;
-	//std::cout << agent.prettyPrintContextTree();
-	//std::cout << "---" << std::endl;
 
 	// Determine best action
 	action_t best_action = NULL;
@@ -109,21 +95,19 @@ extern action_t search(Agent &agent) {
 	for (action_t a = 0; a < agent.numActions(); a++) {
 		const SearchNode *ha = root->child(a);
 		if (NULL == ha) {
-			// Why was this node not explored is a more important question.
-			// Should this be an assert?
 			continue;
 		}
-		double score = ha->expectation();// + rand01() * 0.0001;
+		double score = ha->expectation();
+		// keep track of best score
 		if (score > best_score) {
 			best_score = score;
 			best_action = a;
 		}
 	}
 
-	// Hopefully we're not leaking too much memory.
 	delete root;
 	if (best_score < 0.0) {
-		std::cout << "search picking a random action" << std::endl;
+		// pick random action
 		return agent.genRandomAction();
 	} else {
 		return best_action;
@@ -135,7 +119,6 @@ SearchNode::SearchNode(bool chance) :
 	m_mean(0.0),
 	m_visits(0)
 {
-	// some m_child-ren maybe?
 }
 
 SearchNode::SearchNode() :
@@ -146,7 +129,7 @@ SearchNode::SearchNode() :
 }
 
 SearchNode::~SearchNode(void) {
-	// do I have to delete m_child?
+	
 }
 
 // return pointer to child corresponding to action/percept
@@ -187,9 +170,11 @@ action_t SearchNode::selectAction(Agent &agent) const {
 	}
 	
 	if (unexploredactions != 0){
+		// choose from one of the unexplored actions
 		best_action = unexplored[randRange(0, unexploredactions)];	
 	}
 	else { // All actions have been explored
+		//Pick the best action but also break ties
 		for (action_t a = 0; a < num_actions; a++) {
 			const SearchNode *ha = child(a);
 			double win_value = ha->expectation() / norm_factor;
@@ -205,7 +190,6 @@ action_t SearchNode::selectAction(Agent &agent) const {
 			}
 		}
 		if (bestactions > 0) {
-			//std::cout << "breaking ties" << std::endl;
 			best_action = best[randRange(0, bestactions+1)];
 		} else {
 			best_action = best[0];
@@ -232,12 +216,13 @@ reward_t SearchNode::sample(Agent &agent, unsigned int dfr) {
 		// chance node business
 		// Generates (o,r) from the ctw given h
 		percept_t ob, r;
+		// generate observation and reward, and update ctw/history
 		agent.genPerceptAndUpdate(&ob, &r);
 		// Create node \Psi(hor) if T(hor) = 0, i.e. it doesn't exist
 		if (child(ob) == NULL) {
 			m_child[ob] = new SearchNode(false);
+			// Necessary for some reason, otherwise child SearchNode will be a chance node
 			m_child[ob].m_chance_node = false;
-			//std::cout << "m_chance child[ob].m_chance = " << m_child[ob].m_chance_node << std::endl;
 		}
 		reward = r + m_child[ob].sample(agent, dfr - 1);
 	} else if (m_visits == 0) {
@@ -245,7 +230,8 @@ reward_t SearchNode::sample(Agent &agent, unsigned int dfr) {
 	} else {
 		// not a chance node, pick a maximising action
 		action_t a = selectAction(agent);
-		agent.modelUpdate(a); // should selectAction() do this?
+		// update the model
+		agent.modelUpdate(a);
 		if (child(a) == NULL) {
 			m_child[a] = new SearchNode(true);
 			m_child[a].m_chance_node = true;

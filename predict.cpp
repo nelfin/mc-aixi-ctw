@@ -75,7 +75,8 @@ ContextTree::ContextTree(const ContextTree &ct){
 }
 
 
-// Let's print some REALLY REALLY PRETTY STRINGS, shall we?
+// Printing CTW for debugging
+// Let's print some REALLY REALLY PRETTY STRINGS
 std::string CTNode::prettyPrintNode(int depth) {
 	std::string answer;
 	for (int i = 0; i < depth; i++) {
@@ -140,8 +141,7 @@ void CTNode::update(symbol_t sym, int depth, history_t history) {
 		history.pop_back();
 		this->m_child[h]->update(sym, depth-1, history);
 		// the reason this doesn't use child(h) is because
-		// apparently "child(h)" isn't const but it is but it isn't
-		// GAHAHAHHHAHAHAHAHAHA
+		// apparently "child(h)" isn't const
 		this->m_log_prob_est += this->logKTMul(sym);
 		this->m_count[sym]++;
 		
@@ -155,8 +155,6 @@ void CTNode::update(symbol_t sym, int depth, history_t history) {
 		} else {
 			y = log(0.5) + m_log_prob_est + exponent;
 		}
-//		double z = log(0.5) + x + log(1 + exp(m_log_prob_est - x));
-//		this->m_log_prob_weighted =   exp(x - m_log_prob_est) < exp(m_log_prob_est - x) ? y : z;
 		this->m_log_prob_weighted = y;
 		history.push_back(h);
 	}
@@ -168,8 +166,8 @@ void ContextTree::update(symbol_t sym) {
 		m_history.push_back(sym);
 		return;
 	}
-	m_root->update(sym, m_depth, m_history); // cheating ;)
-	m_history.push_back(sym); // add the new symbol to the history, do we need to do this?
+	m_root->update(sym, m_depth, m_history);
+	m_history.push_back(sym); // add the new symbol to the history
 }
 
 
@@ -188,7 +186,6 @@ void ContextTree::updateHistory(const symbol_list_t &symlist) {
 }
 
 // internal routine to remove a single symbol from the context tree
-// TODO: testing
 void CTNode::revert(symbol_t sym, int depth, history_t history) {
 	if (depth == 0) {
 		this->m_count[sym]--;
@@ -214,16 +211,6 @@ void CTNode::revert(symbol_t sym, int depth, history_t history) {
 				y = log(0.5) + m_log_prob_est + exponent;
 			}
 			this->m_log_prob_weighted = y;
-//			double x = child(0)->logProbWeighted() +
-//				child(1)->logProbWeighted();
-//			double y = log(0.5) + m_log_prob_est + log(1 + exp(x -
-//						m_log_prob_est));
-//			double z = log(0.5) + x + log(1 +
-//						exp(m_log_prob_est - x));
-//			this->m_log_prob_weighted = z;
-			//this->m_log_prob_weighted = log(0.5) +
-				//m_log_prob_est +
-				//log(1 + exp(x - m_log_prob_est));
 		}
 		history.push_back(h);
 	}
@@ -253,7 +240,7 @@ void ContextTree::revertHistory(size_t newsize) {
 // distributed according to the context tree statistics
 void ContextTree::genRandomSymbols(symbol_list_t &symbols, size_t bits) {
 	genRandomSymbolsAndUpdate(symbols, bits);
-	// restore the context tree to its original state   // its* ftfy
+	// restore the context tree to its original state
 	for (size_t i=0; i < bits; i++) revert();
 }
 
@@ -264,27 +251,11 @@ symbol_t ContextTree::predictNext() {
 	if (historySize() < depth()) {
 		return (rand01() < 0.5);
 	}
-	// Pr(1 | h)
-	//  = \frac{Pr(h ^ 1)}{Pr(h)}
-	//  = e^{\log{Pr(h ^ 1)} - \log{Pr(h)}}
-	//printf("Before:\n");
-	//std::cout << this->prettyPrint() << std::endl;
 	double pr_h = logBlockProbability();
 	update(1);
 	double pr_h1 = logBlockProbability();
 	revert();
-	// How much is acceptable error?
-	//printf("After:\n");
-	//std::cout << this->prettyPrint() << std::endl;
 	assert(fabs(logBlockProbability() - pr_h) < 0.0001);
-//	if (pr_h1 > 0.0 || pr_h > 0.0) {
-//		printf("%lf %lf\n", pr_h1 ,pr_h);
-//		printf("numerical error: Pr(1 | h) = %lf\n", exp(pr_h1 - pr_h));
-//		std::cout << this->prettyPrint() << std::endl;
-//		std::terminate();
-//	}
-//	assert(pr_h1 <= 0.0);
-//	assert(pr_h <= 0.0);
 	return rand01() < exp(pr_h1 - pr_h);
 }
 

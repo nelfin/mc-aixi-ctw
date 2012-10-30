@@ -124,6 +124,7 @@ void GridWorld::performAction(action_t action) {
 		m_y = randRange(SIZE+1);
 	}
 	
+	//move player based on action
 	switch (action){
 		case GUP:
 			m_x++;
@@ -143,6 +144,7 @@ void GridWorld::performAction(action_t action) {
 			printf("Error: Unhandled action case");
 	}
 	
+	//reset player back into field if they stray too far
 	if (m_x>SIZE){
 		m_x = SIZE;
 	} else if (m_x<0){
@@ -168,12 +170,15 @@ RPS::RPS(options_t &options) {
 	m_observation = 0;
 	m_signed_reward = 0;
 	
-	m_previous_rock_win = 0;
+	m_previous_rock_win = false;
 }
 
 void RPS::performAction(action_t action) {
+	
+	//if previously won with a rock, play rock again
 	if(m_previous_rock_win){
 		m_observation = ROCK;
+		m_previous_rock_win = false;
 	}else{
 		m_observation = randRange(3);
 	}
@@ -187,8 +192,11 @@ void RPS::performAction(action_t action) {
 	}else{
 		m_signed_reward = -1;
 		logFile << "result: Environment won with " << m_observation << " (reward " << m_signed_reward << ")" << std::endl;
+		if (m_observation == ROCK){
+			m_previous_rock_win = true;
+		}
+		
 	}
-	//logFile << "played: " << m_observation << " vs agent's " << action << std::endl;
 	
 }
 
@@ -236,14 +244,13 @@ KuhnPoker::KuhnPoker(options_t &options) {
 	// Implement strategy for opponent (bet|pass given m_opponent_card)
 	m_opponent_action = getFirstNashAction();
 	assert(m_opponent_action >= 0);
-	//std::cout << "Opponent chose action "<< m_opponent_action <<std::endl;
 	
-	// m_observation = (m_player_card, m_opponent_action);
-	m_observation = 2*m_player_card + m_opponent_action; // Does this operation seem correct?
+	m_observation = 2*m_player_card + m_opponent_action;
 	m_signed_reward = 0;
 	
 }
 
+//Implement Nash strategy
 int KuhnPoker::getFirstNashAction() {
 	switch(m_opponent_card){
 		case JACK:
@@ -300,7 +307,6 @@ void KuhnPoker::performAction(action_t action) {
 			int opponent_second_action = getSecondNashAction();
 			assert(opponent_second_action >= 0);
 			
-			//std::cout << "Opponent's second action was "<< opponent_second_action <<std::endl;
 			if (opponent_second_action == 0) { // Opponent passes again
 				// Player wins - NO SHOWDOWN
 				m_win_flag = true;
@@ -326,12 +332,9 @@ void KuhnPoker::performAction(action_t action) {
 	// REWARD
 	if (m_win_flag){ // Player wins
 		m_signed_reward = m_pot - m_investment;
-		//std::cout << "Opponent had card "<< m_opponent_card << ", player had card " << m_player_card << " so player won" <<std::endl;
 	} else {
 		m_signed_reward = 0 - m_investment;
-		//std::cout << "Opponent had card "<< m_opponent_card << ", player had card " << m_player_card << " so opponent won" <<std::endl;
 	}
-	//std::cout << "Player reward " << m_signed_reward <<std::endl;
 	
 	dealCards();
 	
