@@ -982,7 +982,7 @@ void Composite::initialise(options_t &options, int environment){
 		assert(0.0 <= p);
 		assert(p <= 1.0);
 
-		std::cout << "Initialisation p = " << p <<std::endl;
+		std::cout << "Initialisation Coinflip p = " << p <<std::endl;
 
 		// Set up the initial observation
 		m_observation = rand01() < p ? 1 : 0;
@@ -999,7 +999,7 @@ void Composite::initialise(options_t &options, int environment){
 		assert(0.0 <= p);
 		assert(p <= 1.0);
 
-		std::cout << "Initialisation p = " << p <<std::endl;
+		std::cout << "Initialisation Coinflip p = " << p <<std::endl;
 
 		// Set up the initial observation
 		m_observation = rand01() < p ? 1 : 0;
@@ -1007,7 +1007,29 @@ void Composite::initialise(options_t &options, int environment){
 
 		break;
 	case 2:
-		// Initialise Environment 2
+		// Initialise Environment 2: Tiger
+		p = 1.0;
+		if (options.count("left-door-p") > 0) {
+			strExtract(options["left-door-p"], p);
+		}
+		assert(0.0 <= p);
+		assert(p <= 1.0);
+
+		std::cout << "Initialisation Tiger, p = " << p <<std::endl;
+
+		m_listen_chance = 0.85;
+		if (options.count("listen-p") > 0) {
+			strExtract(options["listen-p"], m_listen_chance);
+		}
+		assert(0.0 <= m_listen_chance);
+		assert(m_listen_chance <= 1.0);
+
+		std::cout << "Initialisation Tiger, listen = " << p <<std::endl;
+
+		m_gold_door = rand01() < p ? 1 : 0;
+		m_signed_reward = 0;
+		m_observation = 2;
+
 		break;
 	case 3:
 		// Initialise Environment 3
@@ -1047,7 +1069,24 @@ void Composite::resolveAction(action_t action, int environment){
 		m_signed_reward = action == m_observation ? 1 : 0;
 		break;
 	case 2:
-		// Resolve action for Environment 2
+		// Resolve action for Environment 2: Tiger
+		if (action == 2) {								// Listen
+			m_signed_reward = -1;
+			if (rand01() < m_listen_chance) {			//Hears the tiger behind the correct door.
+				m_observation = !m_gold_door;
+			} else {									//Hears the tiger behind the incorrect door.
+				m_observation = m_gold_door;
+			}
+		} else {
+			if (action == m_gold_door) { // Chooses the door with the gold
+				m_signed_reward = 10;
+			} else {
+				m_signed_reward = -100;
+			}
+			// Reselect the door for next trial
+			m_observation = 2;
+			m_gold_door = rand01() < p ? 1 : 0;
+		}
 		break;
 	case 3:
 		// Resolve action for Environment 3

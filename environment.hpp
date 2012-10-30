@@ -259,6 +259,11 @@ private:
 	// Coin Flip
 	double p; // For storing the chance of heads
 
+	// Tiger
+	// p is used in tiger for the probability of the gold being behind the left door
+	bool m_gold_door; // The door the gold is behind
+	double m_listen_chance; // The probability that listening will give you correct information
+
 	void initialise(options_t &options, int environment);
 	void resolveAction(action_t action, int environment);
 };

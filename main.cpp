@@ -283,9 +283,9 @@ int main(int argc, char *argv[]) {
 		env = new Composite(options);
 		// THE FOLLOWING VALUES ARE FOR TESTING
 		options["ct-depth"] = "5";
-		options["agent-actions"] = "2";
-		options["observation-bits"] = "1";
-		options["reward-bits"] = "1";
+		options["agent-actions"] = "3";
+		options["observation-bits"] = "2";
+		options["reward-bits"] = "7";
 	}
 	else {
 		std::cerr << "ERROR: unknown environment '" << environment_name << "'" << std::endl;
