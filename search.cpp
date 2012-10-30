@@ -13,7 +13,6 @@ typedef unsigned long long visits_t;
 // search options
 static const visits_t	 MinVisitsBeforeExpansion = 1;
 static const unsigned int MaxDistanceFromRoot  = 100;
-//static size_t			 MaxSearchNodes;
 
 // UCB bound constants
 static const double C = 1.0;
@@ -104,7 +103,6 @@ extern action_t search(Agent &agent) {
 			best_action = a;
 		}
 	}
-
 	delete root;
 	if (best_score < 0.0) {
 		// pick random action
@@ -130,6 +128,9 @@ SearchNode::SearchNode() :
 
 SearchNode::~SearchNode(void) {
 	
+	for (int i = 0; i<m_child.size(); i++){
+		m_child.erase(i);
+	}
 }
 
 // return pointer to child corresponding to action/percept
