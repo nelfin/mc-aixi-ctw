@@ -32,12 +32,14 @@ public:
 	const CTNode *child(symbol_t sym) const { return m_child[sym]; }
 
 	// best cheating function ever
-	void update(symbol_t sym, int depth, history_t history);
+	void update(symbol_t sym);
   
 	// number of descendants
 	size_t size(void) const;
 	
-
+	bool isLeafNode(void) const {
+		return (child(false) == NULL) && (child(true) == NULL);
+	}
 private:
 	CTNode(void);
 
@@ -52,7 +54,7 @@ private:
 	double logKTMul(symbol_t sym) const;
 
 	// remove a single symbol from the context tree
-	void revert(symbol_t sym, int depth, history_t history);
+	void revert(symbol_t sym);
 
 	weight_t m_log_prob_est;	  // log KT estimated probability
 	weight_t m_log_prob_weighted; // log weighted block probability
@@ -62,6 +64,9 @@ private:
 	CTNode *m_child[2];
 	
 	std::string prettyPrintNode(int depth);
+	
+	void updateLogProbability(void);
+	weight_t logKTMultiplier(const symbol_t symbol) const;
 };
 
 class ContextTree {
@@ -85,9 +90,15 @@ public:
 	void update(symbol_t sym); // TODO: implement in predict.cpp
 	void update(const symbol_list_t &symlist); // TODO: implement in predict.cpp
 	void updateHistory(const symbol_list_t &symlist);
-
+	void updateHistory(const symbol_t symbol);
+	
 	// removes the most recently observed symbol from the context tree
 	void revert(void); // TODO: implement in predict.cpp
+	
+	/** Restores the context tree to its state prior to a specified number of
+	 * updates
+	 * \param num_symbols The number of updates (symbols) to revert. */
+	void revert(const int num_symbols);
 
 	// shrinks the history down to a former size
 	void revertHistory(size_t newsize);
@@ -138,6 +149,9 @@ private:
 	CTNode *m_root;	  // the root node of the context tree
 	size_t m_depth;	  // the maximum depth of the context tree
 	
+	CTNode **m_context;
+	
+	void updateContext(void);
 
 };
 

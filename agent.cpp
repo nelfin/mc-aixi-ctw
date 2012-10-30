@@ -189,34 +189,19 @@ void Agent::modelUpdate(action_t action) {
 // revert the agent's internal model of the world
 // to that of a previous time cycle, false on failure
 bool Agent::modelRevert(const ModelUndo &mu) {
-	try {
-	assert(mu.age() <= age());
-	assert(mu.historySize() <= historySize());
-	}
-	catch (char *str) {
-	return false; // yay exception handling!!
+	// Revert excess actions and percepts
+	while (historySize() > mu.historySize()) {
+
+		if(m_last_update_percept) { // Undo percept
+			m_ct->revert(this->m_obs_bits + this->m_rew_bits);
+			m_last_update_percept = !m_last_update_percept;
+		} else {                              // Undo action
+			m_ct->revertHistory(this->m_rew_bits);
+			m_last_update_percept = !m_last_update_percept;
+		}
 	}
 
-	std::cout << "modelRevert" << std::endl;
-	// Wacky...
-	for (size_t i = historySize(); i > mu.historySize(); ) {
-		if (m_last_update_percept) {
-			// revert an observation and reward
-			for (size_t j = 0; j < (m_obs_bits + m_rew_bits); j++) {
-				m_ct->revert();
-			}
-			i -= (m_obs_bits + m_rew_bits);
-			std::cout << "percept" << std::endl;
-		} else {
-			// revert an action
-			m_ct->revertHistory(i - m_actions_bits);
-			i -= m_actions_bits;
-			std::cout << "action" << std::endl;
-		}
-		m_last_update_percept = !m_last_update_percept;
-		std::cout << prettyPrintContextTree();
-	}
-	std::cout << "modelRevert ended" << std::endl;
+	// revert agent parameters
 	m_time_cycle = mu.age();
 	m_total_reward = mu.reward();
 	m_last_update_percept = mu.lastUpdate();
@@ -297,9 +282,8 @@ ModelUndo::~ModelUndo(void) {
 
 // used to revert an agent to a previous state
 ModelUndo::ModelUndo(const Agent &agent) {
-	m_revert_clone = new Agent(agent);
-	m_age		  = agent.age();
-	m_reward	   = agent.reward();
+	m_age = agent.age();
+	m_reward = agent.reward();
 	m_history_size = agent.historySize();
 	m_last_update_percept = agent.getLastUpdate();
 }

@@ -1,0 +1,24 @@
+OURS <----- THEIRS
+_________________________
+search();
+(result=fail)
+
+
+type	change
+
+<--		ModelUndo::ModelUndo
+<--		Agent::modelRevert
+<--		ContextTree::revert()
++		ContextTree::updateContext();
+<--		ContextTree::update(sym);
+<--		ContextTree::~ContextTree(void);
+<-- 	ContextTree::ContextTree(size_t depth)
+<->		CTNode **m_context; //declaration
+<--		ContextTree::revert(int symbols);
+<--		CTNode::update(symbol);
+<--		CTNode::updateLogProbability(void);
++		CTNode::logKTMultiplier(symbol);
++		CTNode::isLeafNode();
++		ContextTree::updateHistory(symol_t symbol)
+<--		CTNode::revert(symbol_t sym);
+(result=)

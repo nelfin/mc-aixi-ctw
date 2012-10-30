@@ -7,6 +7,7 @@
 #include <cmath> // "log" is a BAD idea dude
 #include "util.hpp"
 #include <limits>
+#include <vector>
 
 
 CTNode::CTNode(void) :
@@ -62,10 +63,11 @@ double CTNode::logKTMul(symbol_t sym) const {
 
 
 // create a context tree of specified maximum depth
-ContextTree::ContextTree(size_t depth) :
-	m_root(new CTNode()),
-	m_depth(depth)
-{ return; }
+ContextTree::ContextTree(size_t depth){
+	assert(depth > 0);
+	m_context = new CTNode*[m_depth + 1];
+	return;
+}
 
 ContextTree::ContextTree(const ContextTree &ct){
 	m_depth = ct.m_depth;
@@ -113,7 +115,10 @@ std::string ContextTree::printHistory(void) {
 }
 
 ContextTree::~ContextTree(void) {
-	if (m_root) delete m_root;
+		m_history.clear();
+	delete[] m_context;
+	if (m_root)
+		delete m_root;
 }
 
 
@@ -124,52 +129,56 @@ void ContextTree::clear(void) {
 	m_root = new CTNode();
 }
 
-void CTNode::update(symbol_t sym, int depth, history_t history) {
-	if (depth == 0) {
-		// It's a LEAF!
-		this->m_log_prob_est += this->logKTMul(sym);
-		this->m_count[sym]++;
-		this->m_log_prob_weighted = this->m_log_prob_est;
+// Recalculate the log weighted probability for this node. Preconditions are:
+//  * m_log_prob_est is correct.
+//  * logProbWeighted() is correct for each child node.
+void CTNode::updateLogProbability(void) {
+
+	// Calculate the log weighted probability. If the current node is a leaf
+	// node, this is just the KT estimate. Otherwise it is an even mixture of
+	// the KT estimate and the product of the weighted probabilities of the
+	// children.
+	if (isLeafNode()) {
+		m_log_prob_weighted = m_log_prob_est;
 	} else {
-		// fill out the tree as we go along
-		if (NULL == child(0)) {
-			this->m_child[0] = new CTNode();
-			this->m_child[1] = new CTNode();
-		}
-		symbol_t h = history.back();
-		history.pop_back();
-		this->m_child[h]->update(sym, depth-1, history);
-		// the reason this doesn't use child(h) is because
-		// apparently "child(h)" isn't const but it is but it isn't
-		// GAHAHAHHHAHAHAHAHAHA
-		this->m_log_prob_est += this->logKTMul(sym);
-		this->m_count[sym]++;
-		
-		//See Equation 12 of IEEE CTW paper
-		//Uses identity log(a+c) = log(a) + log(1+exp(log(c) - log(a))
-		double x = child(0)->logProbWeighted() + child(1)->logProbWeighted();
-		double exponent = x - m_log_prob_est;
-		double y;
-		if (fabs(exponent) < 42.0) {
-			y = log(0.5) + m_log_prob_est + log(1 + exp(exponent));
-		} else {
-			y = log(0.5) + m_log_prob_est + exponent;
-		}
-//		double z = log(0.5) + x + log(1 + exp(m_log_prob_est - x));
-//		this->m_log_prob_weighted =   exp(x - m_log_prob_est) < exp(m_log_prob_est - x) ? y : z;
-		this->m_log_prob_weighted = y;
-		history.push_back(h);
+		// The sum of the log weighted probabilities of the child nodes
+		double log_child_prob = 0.0;
+		log_child_prob += child(false) ? child(false)->logProbWeighted() : 0.0;
+		log_child_prob += child(true) ? child(true)->logProbWeighted() : 0.0;
+
+		// Calculate the log weighted probability. Use the formulation which
+		// has the least chance of overflow (see function doc for details).
+		double a = std::max(m_log_prob_est, log_child_prob);
+		double b = std::min(m_log_prob_est, log_child_prob);
+		m_log_prob_weighted = std::log(0.5) + a + std::log(1.0 + std::exp(b - a));
 	}
 }
 
+// Added to the previous logKT estimate upon observing a new symbol.
+weight_t CTNode::logKTMultiplier(const symbol_t symbol) const {
+	double numerator = double(m_count[symbol]) + 0.5;
+	double denominator = double(visits() + 1);
+	return std::log(numerator / denominator);
+}
+
+void CTNode::update(symbol_t sym) {
+	m_log_prob_est += logKTMultiplier(sym);       // Update KT estimate
+	updateLogProbability();                    // Update weighted probability
+	m_count[sym]++;                         // Update symbol counts
+}
+
 void ContextTree::update(symbol_t sym) {
-	// Add pre-history
-	if (m_history.size() < m_depth) {
-		m_history.push_back(sym);
-		return;
+	// Traverse the tree from leaf to root according to the context. Update the
+	// probabilities and symbol counts for each node.
+	if (m_history.size() >= m_depth) {
+		updateContext();
+		for (int i = m_depth; i >= 0; i--) {
+			m_context[i]->update(sym);
+		}
 	}
-	m_root->update(sym, m_depth, m_history); // cheating ;)
-	m_history.push_back(sym); // add the new symbol to the history, do we need to do this?
+
+	// Add symbol to history
+	updateHistory(sym);
 }
 
 
@@ -179,6 +188,10 @@ void ContextTree::update(const symbol_list_t &symlist) {
 	}
 }
 
+// Append a symbol to history without updating context tree.
+void ContextTree::updateHistory(const symbol_t symbol) {
+	m_history.push_back(symbol);
+}
 
 // updates the history statistics, without touching the context tree
 void ContextTree::updateHistory(const symbol_list_t &symlist) {
@@ -189,54 +202,61 @@ void ContextTree::updateHistory(const symbol_list_t &symlist) {
 
 // internal routine to remove a single symbol from the context tree
 // TODO: testing
-void CTNode::revert(symbol_t sym, int depth, history_t history) {
-	if (depth == 0) {
-		this->m_count[sym]--;
-		this->m_log_prob_est -= this->logKTMul(sym);
-		this->m_log_prob_weighted = this->m_log_prob_est;
-	} else {
-		// no need to delete nodes just yet
-		symbol_t h = history.back();
-		history.pop_back();
-		this->m_child[h]->revert(sym, depth-1, history);
-		this->m_count[sym]--;
-		this->m_log_prob_est -= this->logKTMul(sym);
-		// If there's nothing under us then we're a leaf again
-		if (!child(0)->visits() && !child(1)->visits()) {
-			this->m_log_prob_weighted = this->m_log_prob_est;
-		} else {
-			double x = child(0)->logProbWeighted() + child(1)->logProbWeighted();
-			double exponent = x - m_log_prob_est;
-			double y;
-			if (fabs(exponent) < 42.0) {
-				y = log(0.5) + m_log_prob_est + log(1 + exp(exponent));
-			} else {
-				y = log(0.5) + m_log_prob_est + exponent;
-			}
-			this->m_log_prob_weighted = y;
-//			double x = child(0)->logProbWeighted() +
-//				child(1)->logProbWeighted();
-//			double y = log(0.5) + m_log_prob_est + log(1 + exp(x -
-//						m_log_prob_est));
-//			double z = log(0.5) + x + log(1 +
-//						exp(m_log_prob_est - x));
-//			this->m_log_prob_weighted = z;
-			//this->m_log_prob_weighted = log(0.5) +
-				//m_log_prob_est +
-				//log(1 + exp(x - m_log_prob_est));
-		}
-		history.push_back(h);
+void CTNode::revert(symbol_t sym) {
+	m_count[sym]--;                   // Revert symbol count
+	if(m_child[sym] && m_child[sym]->visits() == 0) { // Delete unnecessary child node
+		delete m_child[sym];
+		m_child[sym] = NULL;
+	}
+
+	m_log_prob_est -= logKTMultiplier(sym); // Revert KT estimate
+	updateLogProbability();              // Revert weighted probability
+}
+
+// Get the nodes in the current context
+void ContextTree::updateContext(void) {
+	assert(m_history.size() >= m_depth);
+
+	// Traverse the tree from root to leaf according to the context. Save the
+	// path taken and create new nodes as necessary.
+	m_context[0] = m_root;
+	CTNode **node = &m_root;
+	//symbol_list_t::reverse_iterator symbol_iter = m_history.rbegin();
+	for (int i = 1; i <= m_depth; i++) {
+		// Address of the pointer to the relevant child node
+		node = &((*node)->m_child[m_history.at(i)]);
+
+		// Add node to the path (creating it if it does not exist)
+		if (*node == NULL)
+			*node = new CTNode();
+		m_context[i] = *node;
 	}
 }
 
-
+// Revert multiple updates
+void ContextTree::revert(const int num_symbols) {
+	for(int i = 0; i < num_symbols; i++) {
+		revert();
+	}
+}
 
 // removes the most recently observed symbol from the context tree
 void ContextTree::revert(void) {
-	symbol_t sym = m_history.back();
+	// No updates to revert // TODO: maybe this should be an assertion?
+	if (m_history.size() == 0)
+		return;
+
+	// Get the most recent symbol and delete from history
+	const symbol_t symbol = m_history.back();
 	m_history.pop_back();
+
+	// Traverse the tree from leaf to root according to the context. Update the
+	// probabilities and symbol counts for each node. Delete unnecessary nodes.
 	if (m_history.size() >= m_depth) {
-		m_root->revert(sym, m_depth, m_history);
+		updateContext();
+		for (int i = m_depth; i >= 0; i--) {
+			m_context[i]->revert(symbol);
+		}
 	}
 }
 

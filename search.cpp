@@ -76,57 +76,37 @@ static reward_t playout(Agent &agent, unsigned int playout_len) {
 
 // determine the best action by searching ahead using MCTS
 extern action_t search(Agent &agent) {
+	// Save the agent's current state
+	ModelUndo undo = ModelUndo(agent);
 
-	// Savepoint
-	ModelUndo mu = ModelUndo(agent);
-
-	// Create new tree (start at root)
-	SearchNode *root = new SearchNode(false);
-
-	// Simulate different possible futures
-	const int simulations = 2;//agent.numSimulations();
-	std::cout << "---" << std::endl;
-	//std::cout << agent.prettyPrintContextTree();
-	for (int i = 0; i < simulations; i++) {
-		// should we be throwing away the accumulated reward of the run that
-		// sample generates?
-		std::cout << "before:" << std::endl;
-		std::cout << agent.prettyPrintContextTree();
+	// Create a new search tree
+		SearchNode *root = new SearchNode(false);
+		
+	// Main sampling loop
+	for (int t = 0; t < agent.numSimulations(); t++) {
 		root->sample(agent, agent.horizon());
-		// Restore from savepoint
-		std::cout << "after:" << std::endl;
-		std::cout << agent.prettyPrintContextTree();
-		assert(agent.modelRevert(mu));
+		agent.modelRevert(undo);
 	}
-	std::cout << "reverted:" << std::endl;
-	std::cout << agent.prettyPrintContextTree();
-	std::cout << "---" << std::endl;
 
-	// Determine best action
-	action_t best_action = NULL;
-	double best_score = -1.0;
+	// Determine best action using tree constructed during sampling
+	// by choosing the action branch from this tree that provides the best expected reward.
+	action_t best_action = agent.genRandomAction();
+	double best_mean = -1;
 
-	for (action_t a = 0; a < agent.numActions(); a++) {
-		const SearchNode *ha = root->child(a);
-		if (NULL == ha) {
-			// Why was this node not explored is a more important question.
-			// Should this be an assert?
+	for (action_t a = 0; a <= agent.numActions(); a++) {
+		if (!root->child(a))
 			continue;
-		}
-		double score = ha->expectation() + rand01() * 0.0001;
-		if (score > best_score) {
-			best_score = score;
+
+		double mean = root->child(a)->expectation() + rand01() * 0.0001;
+		if (mean > best_mean) {
+			best_mean = mean;
 			best_action = a;
 		}
 	}
 
-	// Hopefully we're not leaking too much memory.
 	delete root;
-	if (best_score < 0.0) {
-		return agent.genRandomAction();
-	} else {
-		return best_action;
-	}
+
+	return best_action;
 }
 
 SearchNode::SearchNode(bool chance) :
