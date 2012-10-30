@@ -57,7 +57,7 @@ double CTNode::logKTMul(symbol_t sym) const {
 	// next-term pseudo-Laplace estimator, doesn't update m_count[]
 	int temp = m_count[sym];
 	int temp2 = m_count[1 - sym]; // other symbol
-	return log(temp + 0.5) - log(temp + temp2 + 1); //=log((temp+0.5) / log(temp+temp2+1))
+	return log(temp + 0.5) - log(temp + temp2 + 1);
 }
 
 
