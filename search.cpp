@@ -205,7 +205,7 @@ action_t SearchNode::selectAction(Agent &agent) const {
 			}
 		}
 		if (bestactions > 0) {
-			std::cout << "breaking ties" << std::endl;
+			//std::cout << "breaking ties" << std::endl;
 			best_action = best[randRange(0, bestactions+1)];
 		} else {
 			best_action = best[0];

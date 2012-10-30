@@ -764,7 +764,7 @@ void Pacman::performAction(action_t action) {
 			power = false;
 	}
 	
-	//printMap();
+	printMap();
 	m_observation = setObservation();	
 }
 
