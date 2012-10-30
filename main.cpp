@@ -110,7 +110,7 @@ void mainLoop(Agent &ai, Environment &env, options_t &options) {
 		if ((cycle & (cycle - 1)) == 0) {
 			std::cout << "cycle: " << cycle << std::endl;
 			std::cout << "average reward: " << ai.averageReward() << std::endl;
-			std::cout << "agent CTW tree: " << std::endl << ai.prettyPrintContextTree() << std::endl;
+			//std::cout << "agent CTW tree: " << std::endl << ai.prettyPrintContextTree() << std::endl;
 			std::cout << "agent history: " << ai.printHistory() << std::endl;
 			if (explore) {
 				std::cout << "explore rate: " << explore_rate << std::endl;
@@ -199,7 +199,7 @@ int main(int argc, char *argv[]) {
 	options["agent-horizon"] = "16";
 	options["exploration"] = "0";	 // do not explore
 	options["explore-decay"] = "1.0"; // exploration rate does not decay
-	options["mc-simulations"] = "32";
+	options["mc-simulations"] = "100";
 
 	// Read configuration options
 	std::ifstream conf(argv[1]);
@@ -222,6 +222,7 @@ int main(int argc, char *argv[]) {
 	std::string environment_name = options["environment"];
 	if (environment_name == "coin-flip") {
 		env = new CoinFlip(options);
+		options["ct-depth"] = "4";
 		options["agent-actions"] = "2";
 		options["observation-bits"] = "1";
 		options["reward-bits"] = "1";
@@ -234,6 +235,7 @@ int main(int argc, char *argv[]) {
 	}
 	else if (environment_name == "tiger") {
 		env = new Tiger(options);
+		options["ct-depth"] = "35";
 		options["agent-actions"] = "3";
 		options["observation-bits"] = "2";
 		options["reward-bits"] = "7";
@@ -243,6 +245,7 @@ int main(int argc, char *argv[]) {
 	}
 	else if (environment_name == "4x4-grid") {
 		env = new GridWorld(options);
+		options["ct-depth"] = "5";
 		options["agent-actions"] = "4";
 		options["observation-bits"] = "1";
 		options["reward-bits"] = "1";
@@ -252,18 +255,21 @@ int main(int argc, char *argv[]) {
 	}
 	else if (environment_name == "biased-rock-paper-scissor") {
 		env = new RPS(options);
+		options["ct-depth"] = "5";
 		options["agent-actions"] = "3";
 		options["observation-bits"] = "1";
 		options["reward-bits"] = "1";
 	}
 	else if (environment_name == "kuhn-poker") {
 		env = new KuhnPoker(options);
+		options["ct-depth"] = "7";
 		options["agent-actions"] = "2";
 		options["observation-bits"] = "3";
 		options["reward-bits"] = "2";
 	}
 	else if (environment_name == "pacman") {
 		env = new Pacman(options);
+		options["ct-depth"] = "27";
 		options["agent-actions"] = "4";
 		options["observation-bits"] = "16";
 		options["reward-bits"] = "8";
@@ -271,6 +277,7 @@ int main(int argc, char *argv[]) {
 	else if (environment_name == "composite") {
 		env = new Composite(options);
 		// THE FOLLOWING VALUES ARE FOR TESTING
+		options["ct-depth"] = "5";
 		options["agent-actions"] = "2";
 		options["observation-bits"] = "1";
 		options["reward-bits"] = "1";

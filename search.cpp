@@ -84,23 +84,23 @@ extern action_t search(Agent &agent) {
 	SearchNode *root = new SearchNode(false);
 
 	// Simulate different possible futures
-	const int simulations = 2;//agent.numSimulations();
-	std::cout << "---" << std::endl;
+	const int simulations = agent.numSimulations();
+	//std::cout << "---" << std::endl;
 	//std::cout << agent.prettyPrintContextTree();
 	for (int i = 0; i < simulations; i++) {
 		// should we be throwing away the accumulated reward of the run that
 		// sample generates?
-		std::cout << "before:" << std::endl;
-		std::cout << agent.prettyPrintContextTree();
+		//std::cout << "before:" << std::endl;
+		//std::cout << agent.prettyPrintContextTree();
 		root->sample(agent, agent.horizon());
 		// Restore from savepoint
-		std::cout << "after:" << std::endl;
-		std::cout << agent.prettyPrintContextTree();
+		//std::cout << "after:" << std::endl;
+		//std::cout << agent.prettyPrintContextTree();
 		assert(agent.modelRevert(mu));
 	}
-	std::cout << "reverted:" << std::endl;
-	std::cout << agent.prettyPrintContextTree();
-	std::cout << "---" << std::endl;
+	//std::cout << "reverted:" << std::endl;
+	//std::cout << agent.prettyPrintContextTree();
+	//std::cout << "---" << std::endl;
 
 	// Determine best action
 	action_t best_action = NULL;
@@ -113,7 +113,7 @@ extern action_t search(Agent &agent) {
 			// Should this be an assert?
 			continue;
 		}
-		double score = ha->expectation() + rand01() * 0.0001;
+		double score = ha->expectation();// + rand01() * 0.0001;
 		if (score > best_score) {
 			best_score = score;
 			best_action = a;
@@ -123,6 +123,7 @@ extern action_t search(Agent &agent) {
 	// Hopefully we're not leaking too much memory.
 	delete root;
 	if (best_score < 0.0) {
+		std::cout << "search picking a random action" << std::endl;
 		return agent.genRandomAction();
 	} else {
 		return best_action;
@@ -176,8 +177,6 @@ action_t SearchNode::selectAction(Agent &agent) const {
 	int unexploredactions = 0;
 	int bestactions = 0;
 	
-	return 0;
-
 	for (action_t a = 0; a < num_actions; a++) {
 		const SearchNode *ha = child(a);
 		if (NULL == ha || ha->visits() == 0) {
@@ -205,10 +204,12 @@ action_t SearchNode::selectAction(Agent &agent) const {
 				best[bestactions] = a;
 			}
 		}
-		if (bestactions > 0)
+		if (bestactions > 0) {
+			std::cout << "breaking ties" << std::endl;
 			best_action = best[randRange(0, bestactions+1)];
-		else
+		} else {
 			best_action = best[0];
+		}
 	}
 
 	delete[] unexplored;
@@ -235,6 +236,8 @@ reward_t SearchNode::sample(Agent &agent, unsigned int dfr) {
 		// Create node \Psi(hor) if T(hor) = 0, i.e. it doesn't exist
 		if (child(ob) == NULL) {
 			m_child[ob] = new SearchNode(false);
+			m_child[ob].m_chance_node = false;
+			//std::cout << "m_chance child[ob].m_chance = " << m_child[ob].m_chance_node << std::endl;
 		}
 		reward = r + m_child[ob].sample(agent, dfr - 1);
 	} else if (m_visits == 0) {
@@ -245,6 +248,7 @@ reward_t SearchNode::sample(Agent &agent, unsigned int dfr) {
 		agent.modelUpdate(a); // should selectAction() do this?
 		if (child(a) == NULL) {
 			m_child[a] = new SearchNode(true);
+			m_child[a].m_chance_node = true;
 		}
 		reward = m_child[a].sample(agent, dfr);
 	}
