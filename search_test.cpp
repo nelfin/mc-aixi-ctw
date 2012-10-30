@@ -9,10 +9,26 @@
 #include <iostream>
 #include <cassert>
 
+#define COIN_PROB 0.5
+
+options_t options;
+
+void simulate_coinflip(Agent &agent){
+	int coin = rand01() < COIN_PROB;
+	int guess = rand01() < 0.5 ? 1 : 0;
+
+	agent.modelUpdate(guess);
+	agent.modelUpdate(coin,coin==guess);
+}
+
+void simulate_coinflips(Agent &agent, int times){
+	for(int i = 0 ; i < times; i++){
+		simulate_coinflip(agent);
+	}
+}
+
 int main(int argc, char *argv[]) {
 	// Load configuration options
-	options_t options;
-	
 	// Default configuration values
 	options["ct-depth"] = "4";
 	options["agent-horizon"] = "16";
@@ -24,29 +40,18 @@ int main(int argc, char *argv[]) {
 	options["reward-bits"] = "1";
 	
 	Agent ai(options);
-	for(int i = 0; i < 2000; i++){
-		int coin = rand01() < 0;
-		int guess = rand01() < 0.5 ? 1 : 0;
-		
-		ai.modelUpdate(guess);
-		ai.modelUpdate(coin,coin==guess);
-	}
-	std::cout << "before:" << std::endl;
+	simulate_coinflips(ai,2000);
+	std::cout << "After 2000 flips:" << std::endl;
 	std::cout << ai.prettyPrintContextTree();
+	
 	ModelUndo mu = ModelUndo(ai);
 	for (int i = 0; i < 5; i++) {
-		for (int j = 0; j < 200; j++) {
-			int coin = rand01() < 0;
-			int guess = rand01() < 0.5 ? 1 : 0;
-		
-			ai.modelUpdate(guess);
-			ai.modelUpdate(coin,coin==guess);
-		}
+		simulate_coinflips(ai,5);
 		ai.modelRevert(mu);
-		std::cout << "after revert" << std::endl;
+		std::cout << "after revert #" << (i+1) << std::endl;
 		std::cout << ai.prettyPrintContextTree();
 	}
-	std::cout << "after revert" << std::endl;
+	std::cout << "after reverts" << std::endl;
 	std::cout << ai.prettyPrintContextTree();
 
 	std::cout << "Agent history: " << std::endl;
