@@ -237,7 +237,7 @@ public:
 	
 	virtual void performAction(action_t action);
 	
-	percept_t getReward(void) const { return (percept_t) m_signed_reward + 100; }
+	percept_t getReward(void) const { return (percept_t) m_signed_reward - m_minimum_reward; }
 private:
 	// Private variables go here
 	int m_environment[10];
