@@ -256,6 +256,8 @@ private:
 
 	// Environment variables
 
+	int m_minimum_reward; // Unsigned minimum reward over all environments
+
 	// Coin Flip
 	double p; // For storing the chance of heads
 

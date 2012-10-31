@@ -852,11 +852,16 @@ Composite Environments
 // Generic Composite Constructor
 Composite::Composite(options_t &options) {
 
+	m_minimum_reward = 0; // default
+
 	// Extract environment sequence and changeover times
 	int i;
 	for (i = 0; options.count(environmentCode(i)) > 0 && options.count(startCode(i)) > 0; i++){
 		strExtract(options[environmentCode(i)], m_environment[i]);
 		strExtract(options[startCode(i)], m_start[i]);
+		if (m_environment[i] == 2) {
+			m_minimum_reward = -100;
+		}
 	}
 	m_last_environment = i - 1;
 
@@ -1061,6 +1066,10 @@ void Composite::resolveAction(action_t action, int environment){
 		// Resolve action for coinflip1
 		m_observation = rand01() < p ? 1 : 0;
 		m_signed_reward = action == m_observation ? 1 : 0;
+
+		if (action >= 2) {
+			m_signed_reward = m_minimum_reward;
+		}
 
 		break;
 	case 1:

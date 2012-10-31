@@ -282,10 +282,19 @@ int main(int argc, char *argv[]) {
 	else if (environment_name == "composite") {
 		env = new Composite(options);
 		// THE FOLLOWING VALUES ARE FOR TESTING
-		options["ct-depth"] = "5";
-		options["agent-actions"] = "3";
-		options["observation-bits"] = "2";
-		options["reward-bits"] = "7";
+		options["mc-simulations"] = "30";
+		if (options["environment2"] == "2"){ // With Tiger
+			options["ct-depth"] = "30";
+			options["agent-horizon"] = "5";
+			options["agent-actions"] = "3";
+			options["observation-bits"] = "2";
+			options["reward-bits"] = "7";
+		} else { // Just coinflip
+			options["ct-depth"] = "4";
+			options["agent-actions"] = "2";
+			options["observation-bits"] = "1";
+			options["reward-bits"] = "1";
+		}
 	}
 	else {
 		std::cerr << "ERROR: unknown environment '" << environment_name << "'" << std::endl;
